@@ -273,8 +273,8 @@
                 <horizon.url>http://localhost:8000</horizon.url>
                 <!-- KEYSTONE -->
                 <keystone.url>http://localhost:5000</keystone.url>
-                <keystone.admin.user>idm</keystone.admin.user> <!-- INSERT USER -->
-                <keystone.admin.password>idm</keystone.admin.password> <!-- INSERT PASSWORD -->
+                <keystone.admin.user>IDM_USER</keystone.admin.user> <!-- INSERT USER -->
+                <keystone.admin.password>IDM_PWD</keystone.admin.password> <!-- INSERT PASSWORD -->
                 <!-- KEYSTONE -->
                 <!-- END KEYROCK IDM SECTION -->
                 <tomcat.output.dir>${project.basedir}/target</tomcat.output.dir>
@@ -304,8 +304,8 @@
                 <horizon.url>http://XXX.XXX.XX.XXX:8000</horizon.url>
                 <!-- KEYSTONE -->
                 <keystone.url>http://XXX.XXX.XX.XXX:5000</keystone.url>
-                <keystone.admin.user>idm</keystone.admin.user> <!-- INSERT USER -->
-                <keystone.admin.password>idm</keystone.admin.password> <!-- INSERT PASSWORD -->
+                <keystone.admin.user>IDM_USER</keystone.admin.user> <!-- INSERT USER -->
+                <keystone.admin.password>IDM_PWD</keystone.admin.password> <!-- INSERT PASSWORD -->
                 <!-- KEYSTONE -->
                 <!-- END KEYROCK IDM SECTION -->
                 <tomcat.output.dir>${project.basedir}/target</tomcat.output.dir>
@@ -335,7 +335,7 @@
                 <keystone.admin.password></keystone.admin.password> <!-- INSERT PASSWORD -->
                 <!-- KEYSTONE -->
                 <!-- END KEYROCK IDM SECTION -->
-                <tomcat.output.dir>/Users/ascatox/Documents/Servers/apache-tomcat-8.0.33_2/webapps</tomcat.output.dir>
+                <tomcat.output.dir>/out</tomcat.output.dir>
             </properties>
         </profile>
         <profile>
