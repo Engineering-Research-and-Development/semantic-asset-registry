@@ -53,7 +53,7 @@ If creation is successful the user will be redirected to repository summary.
 1.	Open a terminal window and go to the root folder of SAR project .
 2.	Type the command: mvn package.
 3.	Copy the war in ```target/``` to ```<PATH_TO_TOMCAT>/webapps```.
-4.	Browse to ```<YOUR_HOST>:<YOUR_PORT>/ar4cpps ``` to start using application.
+4.	Browse to ```<YOUR_HOST>:<YOUR_PORT>/SAR ``` to start using application.
 
 + **C.** Install Semantic Asset Registry API:<br/>
 ```bash
@@ -81,7 +81,7 @@ sesame.repository (<EXAMPLE_REPO>)
 sesame.namespace
 ```
 
-Copy the sarAPI.war into a Tomcat installation.
+Copy the SARAPI.war into a Tomcat installation.
 
 ```bash
 $ cp ./cam-service/target/sarAPI.war ./apache-tomcat-8.0.33/webapps
@@ -126,16 +126,16 @@ in **Home** page, in **Applications** section, **Register** a new application wi
 <keyrock.authentication.service>OAUTH2</keyrock.authentication.service>
 <horizon.url>http://localhost:8000</horizon.url>
 <keystone.url>http://localhost:5000</keystone.url>
-<keystone.admin.user>idm</keystone.admin.user>
-<keystone.admin.password>idm</keystone.admin.password> 
+<keystone.admin.user>IDM_USER</keystone.admin.user>
+<keystone.admin.password>IDM_PWD</keystone.admin.password> 
 ```
 >You can edit only the properties in `prod` profile.
 
 **4**. From the same folder launch the command `mvn package -P prod`
 
-**5**. Copy the `sar.war` and `sarAPI.war` in your Tomcat webapps installation
+**5**. Copy the `SAR.war` and `SARAPI.war` in your Tomcat webapps installation
 ```bash
-$ cp ./cam-service/target/sarAPI.war ./apache-tomcat-8.0.33/webapps && ./cam/target/sar.war ./apache-tomcat-8.0.33/webapps
+$ cp ./cam-service/target/SARAPI.war ./apache-tomcat-8.0.33/webapps && ./cam/target/sar.war ./apache-tomcat-8.0.33/webapps
 ```
 
 
