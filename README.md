@@ -1,25 +1,25 @@
 [![Build Status](https://travis-ci.org/BEinCPPS/asset-registry-for-cpps.svg?branch=master)](https://travis-ci.org/BEinCPPS/asset-registry-for-cpps)
 
-# Asset Registry for CPPS project
+# Semantic Asset Registry (SAR)
 
 ## Description of the component
 
-The **Asset Registry for CPPS (AR4CPPS)** is a web-based, integrated platform for the management of Virtualized Asset based on [fitman-cam](https://github.com/BEinCPPS/fitman-cam) project. This Specific Enabler is targeted to the business user, who is not required to have IT expertise, nor an in-depth knowledge of ontology-related concepts and technologies.
+The **Semantic Asset Registry (SAR)** is a web-based, integrated platform for the management of Virtualized Asset based on [asset-registry-for-cpps](https://github.com/BEinCPPS/asset-registry-for-cpps) project. This Specific Enabler is targeted to the business user, who is not required to have IT expertise, nor an in-depth knowledge of ontology-related concepts and technologies.
 
-Asset Registry for CPPS is based on several open source components, covering different functional areas; on top of these, it adds a rich layer of web-based, custom front-end functionalities which integrates low-level services into a unified, user-friendly experience.
+Semantic Asset Registry is based on several open source components, covering different functional areas; on top of these, it adds a rich layer of web-based, custom front-end functionalities which integrates low-level services into a unified, user-friendly experience.
 
-Asset Registry for CPPS is delivered as a module that allows the user to manipulate ontologies adding classes and templates and create, manipulate and delete Assets.
+Semantic Asset Registry is delivered as a module that allows the user to manipulate ontologies adding classes and templates and create, manipulate and delete Assets.
 
 
-This Asset Registry for CPPS release contains two modules, **Asset Registry** and **Asset Registry API**.
+This Semantic Asset Registry release contains two modules, **Semantic Asset Registry** and **Semantic Asset Registry API**.
  
-### Asset Registry
+### Semantic Asset Registry
 
-Asset Registry is a web application that exploits cam-service APIs. AR4CPPS allows user to create, manipulate and delete Assets using a web interface.
+Semantic Asset Registry is a web application that exploits cam-service APIs. SAR allows user to create, manipulate and delete Assets using a web interface.
 
-### Asset Registry API
+### Semantic Asset Registry API
 
-Asset Registry API component exposes its own public, proprietary REST-based web API. By means of API calls, the reference ontology, the asset repository and the service registry can be queried by external applications. The usual CRUD operations will be allowed on Class, Assets, Domains and Attributes.
+Semantic Asset Registry API component exposes its own public, proprietary REST-based web API. By means of API calls, the reference ontology, the asset repository and the service registry can be queried by external applications. The usual CRUD operations will be allowed on Class, Assets, Domains and Attributes.
 	
 ## Developer environment
 
@@ -48,14 +48,14 @@ If creation is successful the user will be redirected to repository summary.
    |__ cam-service
 ```
 
-+ **B.** Install Asset Registry for CPPS: <br/>
++ **B.** Install Semantic Asset Registry: <br/>
 
-1.	Open a terminal window and go to the root folder of AR4CPPS project .
+1.	Open a terminal window and go to the root folder of SAR project .
 2.	Type the command: mvn package.
 3.	Copy the war in ```target/``` to ```<PATH_TO_TOMCAT>/webapps```.
 4.	Browse to ```<YOUR_HOST>:<YOUR_PORT>/ar4cpps ``` to start using application.
 
-+ **C.** Install Asset Registry API:<br/>
++ **C.** Install Semantic Asset Registry API:<br/>
 ```bash
 $ cd cam-service
 $ mvn package -P prod
@@ -71,7 +71,7 @@ $ mvn package
 $ mvn verify 
 ```
 
-The default port in order to use Asset Registry for CPPS API with Sesame repo is 8080, feel free to change this parameter inside the file pom.xml.
+The default port in order to use Semantic Asset Registry API with Sesame repo is 8080, feel free to change this parameter inside the file pom.xml.
 
 Change sesame repository properties with your sesame installation: 
 
@@ -81,15 +81,15 @@ sesame.repository (<EXAMPLE_REPO>)
 sesame.namespace
 ```
 
-Copy the ar4cppsAPI.war into a Tomcat installation.
+Copy the sarAPI.war into a Tomcat installation.
 
 ```bash
-$ cp ./cam-service/target/ar4cppsAPI.war ./apache-tomcat-8.0.33/webapps
+$ cp ./cam-service/target/sarAPI.war ./apache-tomcat-8.0.33/webapps
 ```
 
 ## Authentication
 In the latest version of the project, authentication is **mandatory** for every type of environment.<br/>
-Cam Project uses [OAuth2](https://oauth.net/2/) by means of the *Fiware enabler* **[Identity Management - KeyRock](https://catalogue.fiware.org/enablers/identity-management-keyrock)** for authentication and authorization.<br/>
+Semantic Asset Registry Project uses [OAuth2](https://oauth.net/2/) by means of the *Fiware enabler* **[Identity Management - KeyRock](https://catalogue.fiware.org/enablers/identity-management-keyrock)** for authentication and authorization.<br/>
 **Identity Manager - KeyRock** could be installed with different possibilities as explained in the official [Github page](https://github.com/ging/fiware-idm). <br/>
 
 ### Basic configuration
@@ -102,16 +102,16 @@ in **Home** page, in **Applications** section, **Register** a new application wi
 
 | Data        | Value                                           | 
 | ------------- |:---------------------------------------------:| 
-| Name		    | Asset Registry for CPPS			                | 
-| URL           | http://localhost:8080/ar4cpps                     | 
-| Callback URL  | http://localhost:8080/ar4cpps/oauth_callback.html |
+| Name		| Asset Registry for CPPS 	                | 
+| URL           | http://localhost:8080/sar                     | 
+| Callback URL  | http://localhost:8080/sar/oauth_callback.html |
 
 **2**. Click next to register data.<br/>
-**3**. In **Applications** section open AR4CPPS Application and in **OAuth2 Credentials** copy your **Client ID**.
->(*) AR4CPPS local installation on Tomcat standard port.
+**3**. In **Applications** section open SAR Application and in **OAuth2 Credentials** copy your **Client ID**.
+>(*) SAR local installation on Tomcat standard port.
 
-#### AR4CPPS OAuth2 configuration
-**1**. In **cam** folder edit the following properties in [pom.xml](https://github.com/BEinCPPS/asset-registry-for-cpps/blob/master/cam/pom.xml):
+#### SAR OAuth2 configuration
+**1**. In **cam** folder edit the following properties in [pom.xml](https://github.com/is3labengrd/semantic-asset-registry/blob/master/cam/pom.xml):
 
 ```bash
 <authentication.service>oAuth</authentication.service>
@@ -120,7 +120,7 @@ in **Home** page, in **Applications** section, **Register** a new application wi
 ```
 **2**. From the same folder launch the command `mvn package`
 
-**3**. In **cam-service** folder edit the following properties in [pom.xml](https://github.com/BEinCPPS/asset-registry-for-cpps/blob/master/cam-service/pom.xml):
+**3**. In **cam-service** folder edit the following properties in [pom.xml](https://github.com/is3labengrd/semantic-asset-registry/blob/master/cam-service/pom.xml):
  
 ```bash
 <keyrock.authentication.service>OAUTH2</keyrock.authentication.service>
@@ -133,9 +133,9 @@ in **Home** page, in **Applications** section, **Register** a new application wi
 
 **4**. From the same folder launch the command `mvn package -P prod`
 
-**5**. Copy the `ar4cpps.war` and `ar4cppsAPI.war` in your Tomcat webapps installation
+**5**. Copy the `sar.war` and `sarAPI.war` in your Tomcat webapps installation
 ```bash
-$ cp ./cam-service/target/ar4cppsAPI.war ./apache-tomcat-8.0.33/webapps && ./cam/target/ar4cpps.war ./apache-tomcat-8.0.33/webapps
+$ cp ./cam-service/target/sarAPI.war ./apache-tomcat-8.0.33/webapps && ./cam/target/sar.war ./apache-tomcat-8.0.33/webapps
 ```
 
 
