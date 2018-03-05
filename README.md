@@ -102,9 +102,9 @@ in **Home** page, in **Applications** section, **Register** a new application wi
 
 | Data        | Value                                           | 
 | ------------- |:---------------------------------------------:| 
-| Name		| Asset Registry for CPPS 	                | 
-| URL           | http://localhost:8080/sar                     | 
-| Callback URL  | http://localhost:8080/sar/oauth_callback.html |
+| Name		| Semantic Asset Registry (SAR) 	                | 
+| URL           | http://localhost:8080/SAR                     | 
+| Callback URL  | http://localhost:8080/SAR/oauth_callback.html |
 
 **2**. Click next to register data.<br/>
 **3**. In **Applications** section open SAR Application and in **OAuth2 Credentials** copy your **Client ID**.
