@@ -15,7 +15,7 @@
         <authentication.service>oAuth</authentication.service>
     </properties>
     <build>
-        <finalName>SAR</finalName>
+        <finalName>CAM</finalName>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -45,9 +45,9 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <horizon.url>http://XXX.XXX.XX.XXX:8000</horizon.url>
+                <horizon.url>http://192.168.88.171:8000</horizon.url>
                 <!-- OAUTH2 CLIENT ID-->
-                <client.id>f826418d98634f77b1288a6650b30e9c</client.id>
+                <client.id>bb15f911016f46bfa6a36fd7072a828d</client.id>
                 <tomcat.output.dir>${project.basedir}/target</tomcat.output.dir>
             </properties>
         </profile>

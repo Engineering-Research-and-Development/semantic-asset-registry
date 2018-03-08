@@ -8,3 +8,4 @@ target/*
 out/*
 /src/test/test.iml
 target/
+/bin/

@@ -1,9 +1,12 @@
 package it.eng.cam.rest.security.authentication;
 
 import it.eng.cam.rest.Constants;
-import it.eng.cam.rest.security.service.impl.IDMService;
+import it.eng.cam.rest.security.roles.Role;
 import it.eng.cam.rest.security.service.IDMServiceManager;
-import org.apache.commons.lang3.StringUtils;
+import it.eng.cam.rest.security.service.impl.IDMService;
+
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
@@ -13,6 +16,10 @@ import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 /**
  * Created by ascatolo on 13/10/2016.
@@ -24,10 +31,29 @@ import javax.ws.rs.ext.Provider;
 
 public class AuthenticationFilter implements ContainerRequestFilter {
 
+	/**logger for this class **/
+	private static final Logger logger = LogManager.getLogger(
+			AuthenticationFilter.class.getName());
+    
     @Override
     public void filter(ContainerRequestContext requestContext) {
         String path = requestContext.getUriInfo().getPath();
         if (path.isEmpty() || path.contains("authenticate") || path.contains("authorize")) return;
+        
+        CAMPrincipal userPrincipal = null;
+        
+        // REST Service NONE authentication
+        if (Constants.AUTH_SERVICE.equalsIgnoreCase("NONE")) {
+        	logger.info("[AuthenticationFilter] STATUS AUTHENTICATION NONE");
+        	userPrincipal = new CAMPrincipal();
+        	userPrincipal.setName(Constants.ADMIN_USER);
+        	userPrincipal.setUsername(Constants.ADMIN_USER);
+        	userPrincipal.setId(Constants.AUTH_SERVICE_USER_ID);
+        	userPrincipal.getRoles().add(Role.ADMIN);
+        	requestContext.setSecurityContext(new CAMSecurityContext(userPrincipal));
+        	return;
+        }
+        
         String token = requestContext.getHeaderString(Constants.X_AUTH_TOKEN);
         if (StringUtils.isBlank(token)) {
             requestContext.abortWith(Response
@@ -46,7 +72,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
             return;
         }
         //Build User for Authorization
-        CAMPrincipal userPrincipal = authService.getUserPrincipalByResponse(responseAuth);
+        userPrincipal = authService.getUserPrincipalByResponse(responseAuth);
         requestContext.setSecurityContext(new CAMSecurityContext(userPrincipal));
     }
 

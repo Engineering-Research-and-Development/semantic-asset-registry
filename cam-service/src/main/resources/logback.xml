@@ -7,9 +7,10 @@
         </layout>
     </appender>
 
-    <root level="error">
+    <root level="info">
         <appender-ref ref="STDOUT" />
     </root>
-    <logger name="org.apache" level="ERROR" />
-    <logger name="httpclient.wire" level="ERROR" />
+    <logger name="org.apache" level="INFO" />
+    <logger name="httpclient.wire" level="INFO" />
+    <logger name="it.eng" level="INFO" />
 </configuration>

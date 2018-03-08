@@ -23,6 +23,8 @@ public class Constants {
     public static final String IDM_PROJECTS_PREFIX_WITH_SLASH = Constants.IDM_PROJECTS_PREFIX + "/";
     public static final String NO_DOMAIN = "NO_DOMAIN";
     public static String ADMIN_TOKEN;
+    public static String AUTH_SERVICE = finder.getString("authentication.service.status");
+    public static String AUTH_SERVICE_USER_ID = "1";
     /**
      * Orion Context Broker
      **/

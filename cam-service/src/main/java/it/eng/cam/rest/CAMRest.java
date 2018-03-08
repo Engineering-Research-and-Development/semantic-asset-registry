@@ -15,31 +15,55 @@ import it.eng.cam.rest.sesame.dto.AssetJSON;
 import it.eng.cam.rest.sesame.dto.AttributeJSON;
 import it.eng.cam.rest.sesame.dto.ClassJSON;
 import it.eng.cam.rest.sesame.dto.RelationshipJSON;
-import it.eng.ontorepo.*;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.eclipse.rdf4j.model.vocabulary.OWL;
+import it.eng.cam.rest.sesame.utility.SesameRepoUtility;
+import it.eng.ontorepo.Asset;
+import it.eng.ontorepo.BeInCpps;
+import it.eng.ontorepo.ClassItem;
+import it.eng.ontorepo.OrionConfig;
+import it.eng.ontorepo.PropertyDeclarationItem;
+import it.eng.ontorepo.PropertyValueItem;
+import it.eng.ontorepo.RepositoryDAO;
+import it.eng.ontorepo.query.sparql.SparqlQueryFactory;
+import it.eng.ontorepo.reasoner.pellet.PelletReasonerFactory;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.stream.Collectors;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
 @DeclareRoles({Role.BASIC, Role.ADMIN})  //Add new Roles if needed
 @Path("/")
@@ -1210,6 +1234,102 @@ public class CAMRest {
         }
         return content;
     }
+    
+    @POST
+    @Path("/SPARQLInferenceQuery")
+    @RolesAllowed({Role.BASIC, Role.ADMIN})
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response SPARQLInferenceQuery(String sparqlQuery) {
+    	// check if all form parameters are provided
+		if (sparqlQuery == null || sparqlQuery.isEmpty())
+			return Response.status(400).entity("Invalid data input").build();
+
+		String jsonResults = null;
+        try {
+        	jsonResults = PelletReasonerFactory.getInstance().executeInferenceQuery(sparqlQuery);
+        } catch (Exception e) {
+            logger.error("Unable to execute inference Query. Problem with Reasoner", e);
+            throw new CAMServiceWebException(e.getMessage());
+        } 
+        return Response.ok(jsonResults, MediaType.APPLICATION_JSON).build();
+    }
+    
+    @POST
+    @Path("/SPARQLQuery")
+    @RolesAllowed({Role.BASIC, Role.ADMIN})
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response SPARQLQuery(String sparqlQuery) {
+    	// check if all form parameters are provided
+		if (sparqlQuery == null || sparqlQuery.isEmpty())
+			return Response.status(400).entity("Invalid data input").build();
+        String jsonResults = null;
+        try {
+        	jsonResults = SparqlQueryFactory.getInstance().sparqlQuery(sparqlQuery);
+        } catch (Exception e) {
+        	logger.error("Unable to execute SPARQL Query", e);
+            throw new CAMServiceWebException(e.getMessage());
+        } 
+        return Response.ok(jsonResults, MediaType.APPLICATION_JSON).build();
+    }
+    
+    @POST
+    @Path("/SPARQLUpdate")
+    @RolesAllowed({Role.BASIC, Role.ADMIN})
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response SPARQLUpdate(String sparqlUpdate) {
+    	// check if all form parameters are provided
+		if (sparqlUpdate == null || sparqlUpdate.isEmpty())
+			return Response.status(400).entity("Invalid data input").build();
+        try {
+        	SesameRepoUtility.getInstance().sparqlUpdate(sparqlUpdate);
+        	return Response.ok("SPARQL Operation Performed", MediaType.APPLICATION_JSON).build();
+        } catch (Exception e) {
+            logger.error("Unable to execute SPARQL Update", e);
+            throw new CAMServiceWebException(e.getMessage());
+        }
+    }
+    
+    @POST
+    @Path("/UploadRDFFile")
+    @RolesAllowed({Role.BASIC, Role.ADMIN})
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response UploadRDFFile(@FormDataParam("file") InputStream uploadedInputStream,
+    		@FormDataParam("file") FormDataContentDisposition fileDetail) {
+    	// check if all form parameters are provided
+		if (uploadedInputStream == null || fileDetail == null)
+			return Response.status(400).entity("Invalid data input").build();
+		File rdfFile = null;
+        try {
+        	rdfFile = writeTempFile(uploadedInputStream, fileDetail.getFileName());
+        	SesameRepoUtility.getInstance().addRdfFileToRepo(rdfFile, null, true);
+        	return Response.ok("RDF File was successfully added to REPO!").build();
+        } catch (Exception e) {
+            logger.error("Unalbe to import RDF file", e);
+            throw new CAMServiceWebException(e.getMessage());
+        } finally {
+        	if (rdfFile != null) {
+        		rdfFile.delete();
+        		rdfFile = null;
+        		logger.info("RDF file successfully removed from the Server's TMP directory");
+        	}
+        }
+    }
+    
+    // save uploaded file to new location
+ 	private File writeTempFile(InputStream uploadedInputStream, String fileName) {
+ 		File tempFile = null;
+ 		try {
+ 			//create a temp file and write it buffer content
+ 			tempFile = File.createTempFile(fileName, ".rdf");
+			java.nio.file.Files.copy(uploadedInputStream, tempFile.toPath(),
+					StandardCopyOption.REPLACE_EXISTING);
+			IOUtils.closeQuietly(uploadedInputStream);
+ 		} catch (IOException e) {
+ 			logger.error("Unable to write file", e);
+ 		}
+ 		return tempFile;
+ 	}
 
     private void cleanProps(String individualName) {
         RepositoryDAO repoInstance = SesameRepoManager.getRepoInstance(getClass());
