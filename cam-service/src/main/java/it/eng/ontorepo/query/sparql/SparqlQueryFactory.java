@@ -1,7 +1,8 @@
 package it.eng.ontorepo.query.sparql;
 
+import it.eng.cam.finder.FinderFactory;
+
 import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -21,7 +22,6 @@ public class SparqlQueryFactory {
 
 	private static SparqlQueryFactory instance = null;
 	
-	public static ResourceBundle finder = null;
     private static String SESAME_REPO_URL = null;
     private static String SESAME_REPO_NAME = null;
     private static String CONTENT_TYPE_SPARQL_QUERY = "application/sparql-query";
@@ -29,7 +29,7 @@ public class SparqlQueryFactory {
     
     static {
         try {
-            finder = ResourceBundle.getBundle("cam-service");
+        	FinderFactory finder = FinderFactory.getInstance();
             SESAME_REPO_URL = finder.getString("sesame.url");
             SESAME_REPO_NAME = finder.getString("sesame.repository");
         } catch (MissingResourceException e) {

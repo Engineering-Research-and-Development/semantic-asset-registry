@@ -1,5 +1,6 @@
 package it.eng.cam.rest;
 
+import it.eng.cam.finder.FinderFactory;
 import it.eng.cam.rest.exception.CAMServiceWebException;
 import it.eng.cam.rest.orion.context.ContextElement;
 import it.eng.cam.rest.security.authentication.CAMPrincipal;
@@ -36,7 +37,6 @@ import java.net.URL;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import javax.annotation.security.DeclareRoles;
@@ -1205,7 +1205,7 @@ public class CAMRest {
     public String summary(@Context HttpServletRequest httpRequest) {
         String content = "";
         StringBuilder contentBuilder = new StringBuilder();
-        ResourceBundle finder = ResourceBundle.getBundle("cam-service");
+        FinderFactory finder = FinderFactory.getInstance();
         try {
             URL url = getClass().getResource("/summary.html");
             File file = new File(url.toURI());

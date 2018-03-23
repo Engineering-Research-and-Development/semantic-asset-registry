@@ -5,9 +5,6 @@ import it.eng.cam.rest.security.roles.Role;
 import it.eng.cam.rest.security.service.IDMServiceManager;
 import it.eng.cam.rest.security.service.impl.IDMService;
 
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -42,9 +39,12 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         
         CAMPrincipal userPrincipal = null;
         
+        logger.info("AuthenticationFilter --> [path] : " + path);
+        
         // REST Service NONE authentication
         if (Constants.AUTH_SERVICE.equalsIgnoreCase("NONE")) {
-        	logger.info("[AuthenticationFilter] STATUS AUTHENTICATION NONE");
+        	if (logger.isDebugEnabled())
+        		logger.debug("[AuthenticationFilter] STATUS AUTHENTICATION NONE");
         	userPrincipal = new CAMPrincipal();
         	userPrincipal.setName(Constants.ADMIN_USER);
         	userPrincipal.setUsername(Constants.ADMIN_USER);

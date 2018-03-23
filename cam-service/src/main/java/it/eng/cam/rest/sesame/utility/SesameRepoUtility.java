@@ -1,8 +1,9 @@
 package it.eng.cam.rest.sesame.utility;
 
+import it.eng.cam.finder.FinderFactory;
+
 import java.io.File;
 import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 import org.apache.log4j.Logger;
 import org.eclipse.rdf4j.IsolationLevels;
@@ -18,7 +19,6 @@ public class SesameRepoUtility {
 
 	private static final Logger logger = Logger
 			.getLogger(SesameRepoUtility.class.getName());
-	public static ResourceBundle finder = null;
 
 	private static String SESAME_REPO_URL = null;
 	private static String SESAME_REPO_NAME = null;
@@ -27,7 +27,7 @@ public class SesameRepoUtility {
 
 	static {
 		try {
-			finder = ResourceBundle.getBundle("cam-service");
+			FinderFactory finder = FinderFactory.getInstance();
 			SESAME_REPO_URL = finder.getString("sesame.url");
 			SESAME_REPO_NAME = finder.getString("sesame.repository");
 		} catch (MissingResourceException e) {

@@ -1,21 +1,20 @@
 package it.eng.cam.rest.sesame;
 
+import it.eng.cam.finder.FinderFactory;
+import it.eng.cam.rest.Constants;
+import it.eng.ontorepo.BeInCpps;
+import it.eng.ontorepo.RepositoryDAO;
+import it.eng.ontorepo.sesame2.Sesame2RepositoryDAO;
+
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
-import it.eng.cam.rest.Constants;
-import it.eng.ontorepo.BeInCpps;
 import org.apache.log4j.Logger;
-
-import it.eng.ontorepo.RepositoryDAO;
-import it.eng.ontorepo.sesame2.Sesame2RepositoryDAO;
 
 public class SesameRepoManager {
     private static final Logger logger = Logger.getLogger(SesameRepoManager.class.getName());
-    public static ResourceBundle finder = null;
 
     private static String SESAME_REPO_URL = null;
     private static String SESAME_REPO_NAME = null;
@@ -26,7 +25,7 @@ public class SesameRepoManager {
 
     static {
         try {
-            finder = ResourceBundle.getBundle("cam-service");
+        	FinderFactory finder = FinderFactory.getInstance();
             SESAME_REPO_URL = finder.getString("sesame.url");
             SESAME_REPO_NAME = finder.getString("sesame.repository");
             SESAME_REPO_NAMESPACE = finder.getString("sesame.namespace");

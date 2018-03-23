@@ -1,15 +1,14 @@
 package it.eng.cam.rest;
 
+import it.eng.cam.finder.FinderFactory;
 import it.eng.cam.rest.security.roles.RoleManager;
-
-import java.util.ResourceBundle;
 
 /**
  * Created by ascatolo on 26/10/2016.
  */
 public class Constants {
     public static final String DATE_PATTERN_DATE_TIME_TIMEZONE = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
-    public static ResourceBundle finder = ResourceBundle.getBundle("cam-service");
+    public static FinderFactory finder = FinderFactory.getInstance();
     public static final String ONTOLOGY_NAMESPACE_DEFAULT = finder.getString("ontology.namespace.default");
     public static final String IDM_URL_HORIZON = finder.getString("horizon.url");
     public static final String IDM_URL_KEYSTONE = finder.getString("keystone.url") + "/v3";

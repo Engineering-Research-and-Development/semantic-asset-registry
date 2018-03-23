@@ -1,9 +1,10 @@
 package it.eng.ontorepo.reasoner.pellet;
 
+import it.eng.cam.finder.FinderFactory;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -31,14 +32,13 @@ public class PelletReasonerFactory {
 	private static final Logger logger = LogManager.getLogger(
 			PelletReasonerFactory.class.getName());
 
-	public static ResourceBundle finder = null;
     private static String SESAME_REPO_URL = null;
     private static String SESAME_REPO_NAME = null;
     private static String SESAME_DOCUMENT_IRI = null;
     
     static {
         try {
-            finder = ResourceBundle.getBundle("cam-service");
+        	FinderFactory finder = FinderFactory.getInstance();
             SESAME_REPO_URL = finder.getString("sesame.url");
             SESAME_REPO_NAME = finder.getString("sesame.repository");
             SESAME_DOCUMENT_IRI = SESAME_REPO_URL + "repositories/" + SESAME_REPO_NAME + "/statements";
