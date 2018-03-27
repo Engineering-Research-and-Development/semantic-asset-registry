@@ -10,6 +10,7 @@ Semantic Asset Registry is based on several open source components, covering dif
 
 Semantic Asset Registry is delivered as a module that allows the user to manipulate ontologies adding classes and templates and create, manipulate and delete Assets.
 
+GI
 
 This Semantic Asset Registry release contains two modules, **Semantic Asset Registry** and **Semantic Asset Registry API**.
  
