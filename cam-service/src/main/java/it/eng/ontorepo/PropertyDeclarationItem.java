@@ -3,6 +3,7 @@ package it.eng.ontorepo;
 import java.math.BigDecimal;
 import java.util.Calendar;
 
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 
@@ -123,10 +124,23 @@ public class PropertyDeclarationItem extends Tuple {
     public PropertyDeclarationItem(String namespace, String name, String type, String range) {
         super(namespace, name, type);
         this.range = range; // can be null or empty
-        if (OWL.OBJECTPROPERTY.stringValue().equals(type)) {
+        
+        /* giaisg add 20180309 */
+        String OWLtype = type.indexOf("#") == -1 
+        		? SimpleValueFactory.getInstance().createIRI(OWL.NAMESPACE, type).stringValue()
+        		: type;
+        /* end add */
+                
+        /* giaisg modify
+         * if (OWL.OBJECTPROPERTY.stringValue().equals(type)) {*/
+        if (OWL.OBJECTPROPERTY.stringValue().equals(OWLtype)) {
+        	/* end modify */
             // object property: range is meaningless in the Java type system
             this.type = Object.class;
-        } else if (OWL.DATATYPEPROPERTY.stringValue().equals(type)) {
+        /* giaisg modify
+         * } else if (OWL.DATATYPEPROPERTY.stringValue().equals(type)) {*/
+        } else if (OWL.DATATYPEPROPERTY.stringValue().equals(OWLtype)) {
+        	/* end modify */
             // data property: we try to match the range with a Java type
             // NOTE: only properties with a single range statement are supported
             if (null != range && !range.isEmpty()) {

@@ -325,10 +325,18 @@ public class CAMRest {
         try {
             repoInstance = SesameRepoManager.getRepoInstance(getClass());
             List<PropertyValueItem> individualAttributes = CAMRestImpl.getIndividualAttributes(repoInstance, assetName);
+            
+            
+            /* giaisg add for debug */
+            for (PropertyValueItem pvi : individualAttributes) {
+				System.err.println("normalizedValue=" + pvi.getNormalizedValue() + "\tnormalizedName=" + pvi.getNormalizedName()); 
+			}
+            /* end add */
+            
             return individualAttributes.stream()
-                    /*.filter(item -> !item.getNormalizedValue().equals(OWL.OBJECTPROPERTY.stringValue())
-                            && !item.getNormalizedName().contains("system")
-                    )*/
+                    .filter(item -> !item.getNormalizedValue().equals(OWL.OBJECTPROPERTY.stringValue())
+                           // && !item.getNormalizedName().contains("system")
+                    )
                     .collect(Collectors.toList());
         } catch (Exception e) {
             logger.error(e);
@@ -469,9 +477,16 @@ public class CAMRest {
         try {
             repoInstance = SesameRepoManager.getRepoInstance(getClass());
             List<PropertyValueItem> individualAttributes = CAMRestImpl.getIndividualAttributes(repoInstance, assetName);
+            
+            System.err.println(OWL.OBJECTPROPERTY.stringValue());            
+            for (PropertyValueItem pvi : individualAttributes) {
+				System.err.println("\tnormalizedValue=" + pvi.getNormalizedValue() + "\tnormalizedName=" + pvi.getNormalizedName()); 
+			}
+            
             return individualAttributes.stream()
                     .filter(item -> item.getNormalizedValue().equals(OWL.OBJECTPROPERTY.stringValue())
-                            && !item.getNormalizedName().contains("system"))
+                            //&& !item.getNormalizedName().contains("system")
+                            )
                     .collect(Collectors.toList());
         } catch (Exception e) {
             logger.error(e);

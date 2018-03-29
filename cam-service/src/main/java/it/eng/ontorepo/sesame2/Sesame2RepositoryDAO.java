@@ -1,15 +1,24 @@
 package it.eng.ontorepo.sesame2;
 
-import it.eng.cam.rest.Constants;
-import it.eng.cam.rest.sesame.SesameRepoManager;
-import it.eng.ontorepo.BeInCpps;
-import it.eng.ontorepo.ClassItem;
-import it.eng.ontorepo.IndividualItem;
-import it.eng.ontorepo.OrionConfig;
-import it.eng.ontorepo.PropertyDeclarationItem;
-import it.eng.ontorepo.PropertyValueItem;
-import it.eng.ontorepo.RepositoryDAO;
-import it.eng.ontorepo.Util;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Level;
@@ -24,11 +33,18 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.URI;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
-import org.eclipse.rdf4j.query.*;
+import org.eclipse.rdf4j.query.Binding;
+import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.MalformedQueryException;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.eclipse.rdf4j.query.QueryLanguage;
+import org.eclipse.rdf4j.query.TupleQueryResult;
+import org.eclipse.rdf4j.query.impl.MapBindingSet;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryResult;
@@ -43,16 +59,16 @@ import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.MalformedURLException;
-import java.util.*;
-import java.util.function.Predicate;
+import it.eng.cam.rest.Constants;
+import it.eng.cam.rest.sesame.SesameRepoManager;
+import it.eng.ontorepo.BeInCpps;
+import it.eng.ontorepo.ClassItem;
+import it.eng.ontorepo.IndividualItem;
+import it.eng.ontorepo.OrionConfig;
+import it.eng.ontorepo.PropertyDeclarationItem;
+import it.eng.ontorepo.PropertyValueItem;
+import it.eng.ontorepo.RepositoryDAO;
+import it.eng.ontorepo.Util;
 
 /**
  * Implementation of {@link RepositoryDAO} for accessing the Reference Ontology
@@ -100,10 +116,16 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
             " }";
 
 
-    private static final String QUERY_CLASS = "SELECT ?name " + "WHERE { ?name rdf:type <" + OWL.CLASS + ">. "
+    /* giaisg 20180323 modify
+     * private static final String QUERY_CLASS = "SELECT ?name " + "WHERE { ?name rdf:type <" + OWL.CLASS + ">. "
             + "FILTER(?name = <" + VARTAG + ">"
             + " && " + FILTER_BY_NS_CONTENT
             + ") }";
+     */
+    private static final String QUERY_CLASS = "SELECT ?name " + "WHERE { ?name rdf:type <" + OWL.CLASS + ">. "
+            + "FILTER(?name = <" + VARTAG + ">"
+            + ") }";
+    /* End modify */
 
     private static final String QUERY_OBJECT_PROPS = "SELECT DISTINCT ?name ?range " + "WHERE { ?name rdf:type <"
             + OWL.OBJECTPROPERTY + "> " + "OPTIONAL { ?name rdfs:range ?range } " +
@@ -133,11 +155,21 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
             ")} "
             + "ORDER BY ?name";
 
+    /* giaisg 20160313 Modify
     private static final String QUERY_SINGLE_INDIVIDUAL = "SELECT DISTINCT ?class " + "WHERE { <" + VARTAG
             + "> rdf:type ?class; " + // replace VARTAG by qualified individual
             // name
             " rdf:type owl:NamedIndividual. " + "FILTER(!(?class = owl:NamedIndividual)" +
-            ")} ";
+            ")} "; */
+    private static final String QUERY_SINGLE_INDIVIDUAL = "SELECT DISTINCT ?class " + 
+    "WHERE { " + 
+    "  ?asset rdf:type ?class;  rdf:type owl:NamedIndividual. " + 
+    "  FILTER(STRENDS(STR(?asset), \"#" + VARTAG + "\"))" + 
+    "  FILTER(!(?class = owl:NamedIndividual))" + 
+    "}";
+    /*end Modify*/
+    
+    
 
     private static final String QUERY_INDIVIDUALS_FOR_CLASS = "SELECT DISTINCT ?name " + "WHERE { ?name rdf:type <"
             + VARTAG + "> " +
@@ -145,19 +177,38 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
             "} " + // replace VARTAG by qualified class name
             "ORDER BY ?name";
 
-    private static final String QUERY_PROPS_FOR_INDIVIDUAL = "SELECT DISTINCT ?name ?value ?type ?range " + "WHERE { <"
+    /* giaisg modify 20180309
+     * private static final String QUERY_PROPS_FOR_INDIVIDUAL = "SELECT DISTINCT ?name ?value ?type ?range " + "WHERE { <"
             + VARTAG + "> ?name ?value. " + // replace VARTAG by qualified
             // individual name
             "?name rdf:type ?type. " + "OPTIONAL { ?name rdfs:range ?range } " + "FILTER(!(?name = rdf:type)) "
             + "FILTER(!(?type= owl:FunctionalProperty)" +
             //" && " + FILTER_BY_NS_CONTENT +
-            ")}" + "ORDER BY ?name";
+            ")}" + "ORDER BY ?name";*/
+    private static final String QUERY_PROPS_FOR_INDIVIDUAL = "SELECT DISTINCT ?name ?value ?type ?range " + "WHERE {"
+    		+ " ?end ?name ?value. " 
+            + " FILTER(STRENDS(STR(?end), \"" + VARTAG + "\"))" // replace VARTAG by unqualified individual name
+            + " ?name rdf:type ?type. " + "OPTIONAL { ?name rdfs:range ?range } " 
+            + " FILTER(!(?name = rdf:type))"
+            + " FILTER(!(?type= owl:FunctionalProperty)" 
+            + ")}" 
+            + "ORDER BY ?name";
+    /* end modify */
 
-    private static final String QUERY_PROP_FOR_INDIVIDUAL = "SELECT ?value " + "WHERE { <" + VARTAG + "> <" + VARTAG2
+    /* giaisg modify 20180309
+     * private static final String QUERY_PROP_FOR_INDIVIDUAL = "SELECT ?value " + "WHERE { <" + VARTAG + "> <" + VARTAG2
             + "> ?value. " +
             "} "; // replace VARTAG & VARTAG2 by qualified
     // individual name and property name
-
+    */
+    private static final String QUERY_PROP_FOR_INDIVIDUAL = "SELECT ?value " + 
+    		"WHERE { " + 
+    		"  ?asset ?property ?value. " + 
+    		"  FILTER(STRENDS(STR(?asset),\"" + VARTAG + "\"))" + 
+    		"  FILTER(STRENDS(STR(?property),\"" + VARTAG2 + "\"))" + 
+    		"}";
+    /* end modify */
+    
     private static final String QUERY_PROP_ASSIGNMENTS = "SELECT ?name ?value " + "WHERE { ?name <" + VARTAG
             + "> ?value. " +
             FILTER_BY_NS +
@@ -215,7 +266,8 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
             "). " +
             "}";*/
 
-    private static final String QUERY_INDIVIDUALS_BY_SUB_CLASSES = "SELECT DISTINCT ?name ?class WHERE "
+    /* modify by giaisg 20180306 to ignore the different namespaces
+     * private static final String QUERY_INDIVIDUALS_BY_SUB_CLASSES = "SELECT DISTINCT ?name ?class WHERE "
             + "{ "
             + "?nameclass rdf:type <http://www.w3.org/2002/07/owl#Class>; rdfs:subClassOf* ?superclass. "
             + "FILTER(?superclass = <" + VARTAG + ">). "
@@ -223,7 +275,18 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
             + " FILTER((?class = ?nameclass)" +
             " && " + FILTER_BY_NS_CONTENT +
             "). "
+            + "} ORDER by ?name";*/
+    private static final String QUERY_INDIVIDUALS_BY_SUB_CLASSES = "SELECT DISTINCT ?name ?class WHERE "
+            + "{ "
+            + "?nameclass rdf:type <http://www.w3.org/2002/07/owl#Class>; rdfs:subClassOf* ?superclass. "
+            + "FILTER(STRENDS(STR(?superclass), \"" + VARTAG + "\") ). "
+            + "?name rdf:type ?class; rdf:type owl:NamedIndividual. "
+            //+ " FILTER(?class != ?superclass)."
+            + " FILTER((?class = ?nameclass)" +
+            " && " + FILTER_BY_NS_CONTENT +
+            "). "
             + "} ORDER by ?name";
+    /* end modify*/
 
     private static final String QUERY_INDIVIDUALS_BY_ORION_CONFIG = "SELECT DISTINCT ?name ?class ?orionConfig WHERE "
             + "{ "
@@ -233,6 +296,16 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
             + "  &&  regex(str(?orionConfig), \"" + VARTAG2 + "\")"
             + ").}";
 
+    /* giaisg 20180314 add */
+
+    private static final String QUERY_ADD_NAMESPACE_TO_INDIVIDUAL_OR_PROPERTY = "SELECT DISTINCT ?end WHERE {" 
+		+ "  ?end ?name ?value."  
+		+ "  FILTER(STRENDS(STR(?end), \"" + VARTAG + "\"))" 
+		+ "}";
+     /* end add  */
+    
+    
+    
     // Modified by @ascatox 2016-04-26 to use MemoryStore in Unit Test
     private AbstractRepository repo;
     private final ValueFactory vf;
@@ -411,10 +484,10 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
             if (null == namespace || namespace.isEmpty()) {
                 // no implicit namespace was provided, try to get the default
                 // one
-                ns = con.getNamespace(null);
-                if (null == ns) {
+               /* ns = con.getNamespace(null);
+                if (null == ns) {*/
                     throw new IllegalStateException("No default namespace is available");
-                }
+                //}
             } else {
                 // we get the namespace as-is
                 ns = namespace;
@@ -644,29 +717,30 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         if (null == className || className.length() == 0) {
             throw new IllegalArgumentException("Class name is mandatory");
         }
-        className = Util.getGlobalName(getImplicitNamespace(), className);
-        String qs = QUERY_INDIVIDUALS_BY_SUB_CLASSES.replace(VARTAG, className);
-        /*return doGetIndividuals(qs, null);*/
-        List<IndividualItem> resultTemp = doGetIndividuals(qs, className);
-        List<IndividualItem> result = new ArrayList<IndividualItem>(); 
-        		
-        /* remove namespace in result */
-        for (Iterator<IndividualItem> iterator = resultTemp.iterator(); iterator.hasNext();) {
-			IndividualItem curr = (IndividualItem) iterator.next();
-			
-			IndividualItem curr2 = new IndividualItem(
-					curr.getNamespace(), 
-					curr.getNormalizedName(), 
-					curr.getClassName().substring(curr.getClassName().indexOf("#") + 1, curr.getClassName().length()));
-			
-			result.add(curr2);
-		}
+        /* remove by giaisg 20180306*/
+        //className = Util.getGlobalName(getImplicitNamespace(), className);
         /* end remove */
-                
-        logger.info("End getIndividualsBySubClasses() with result\t" + result );
-        return result;
+        String qs = QUERY_INDIVIDUALS_BY_SUB_CLASSES.replace(VARTAG, className);
+        
+        logger.debug(qs);
+        
+        /*return doGetIndividuals(qs, null);*/
+        List<IndividualItem> resultTemp = doGetIndividuals(qs, null);//className);
+       
+        logger.info("End getIndividualsBySubClasses() with resultTemp\t" + resultTemp );
+        return resultTemp;
     }
 
+//    public List<IndividualItem> getIndividualsBySubClasses(String className) throws RuntimeException {
+//    	logger.info("Start getIndividualsBySubClasses(" + className + ")");
+//        if (null == className || className.length() == 0) {
+//            throw new IllegalArgumentException("Class name is mandatory");
+//        }
+//        //className = Util.getGlobalName(getImplicitNamespace(), className);
+//        String qs = QUERY_INDIVIDUALS_BY_SUB_CLASSES.replace(VARTAG, className);
+//        return doGetIndividuals(qs, null);
+//    }
+    
     @Override
     public List<IndividualItem> getIndividualsByOrionConfig(String orionConfig) throws RuntimeException {
     	logger.info("Start getIndividualsByOrionConfig(" + orionConfig + ")");
@@ -677,7 +751,20 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         return doGetIndividuals(qs, null);
     }
 
-
+    private BindingSet getNamespaceToIndividualOrProperty(String subj) throws RuntimeException {
+    	logger.info("Start getNamespaceToIndividualOrProperty(" + subj + ")");
+        if (StringUtils.isBlank(subj))
+            throw new IllegalArgumentException("Individual/property is mandatory");
+        String qs = QUERY_ADD_NAMESPACE_TO_INDIVIDUAL_OR_PROPERTY.replace(VARTAG, subj);
+        List<BindingSet> response = executeSelectWithoutNamespaceRemove(qs);
+        
+        if(null == response || response.size() != 1) {
+        	throw new IllegalArgumentException("Individual/property is mandatory");
+        }
+        
+        return response.get(0);         
+    }
+    
     @Override
     public IndividualItem getIndividual(String name) throws RuntimeException {
     	logger.info("Start getIndividual(" + name + ")");
@@ -722,11 +809,22 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
             namespace = getImplicitNamespace();
 
         List<PropertyValueItem> items = new ArrayList<PropertyValueItem>();
+        /* giaisg removed 20180309
         name = Util.getGlobalName(namespace, name);
+        */
         // System.out.println("VARTAG: "+name);
+        if(!name.startsWith("#")) {
+        	name = "#" + name;
+        }
         String qs = QUERY_PROPS_FOR_INDIVIDUAL.replace(VARTAG, name);
+        
+        //logger.debug(qs);
+        
         String lastName = null;
         List<BindingSet> results = executeSelect(qs);
+        
+        //logger.debug(results);
+        
         for (BindingSet result : results) {
             PropertyValueItem item = getPropertyValueItem(result, name);
             // silently discard duplicate entries: same name, different
@@ -769,6 +867,8 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         Value v = s.getValue("range");
         String range = null != v ? v.stringValue() : null;
         String value = s.getValue("value").stringValue();
+        logger.debug(getImplicitNamespace() + ", " + name + ", " + type + ", " + range + ", " + 
+        		individualName + ", " + value);
         return new PropertyValueItem(getImplicitNamespace(), name, type, range, individualName, value);
     }
 
@@ -831,7 +931,9 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
             throw new IllegalArgumentException("Individual name is mandatory");
         }
         List<PropertyValueItem> items = new ArrayList<PropertyValueItem>();
+        /* giaisg 20180314 remove
         name = Util.getGlobalName(namespace, name);
+        */
         String qs = QUERY_PROPS_FOR_INDIVIDUAL.replace(VARTAG, name);
         String lastName = null;
         List<BindingSet> results = executeSelect(qs);
@@ -846,7 +948,7 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
     }
 
 	@Override
-    public void createUser(String id) throws IllegalArgumentException, RuntimeException {
+    public void createUser(String id) throws IllegalArgumentException {
         //String origUsername = id;
         if (null == id || id.length() == 0) {
             throw new IllegalArgumentException("User name is mandatory");
@@ -1045,7 +1147,18 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
 
         parentName = Util.getGlobalName(getImplicitNamespace(), parentName);
         if (!OWL.THING.stringValue().equals(parentName) && getClassDeclarationCount(parentName) == 0) {
-            throw new IllegalArgumentException("SuperClass " + parentName + " does not exist");
+        	
+        	/* giaisg 20180323 add */
+        	logger.warn("Class " + parentName + " does not exist. Try to find right namespace.");
+        	parentName = getNamespaceToIndividualOrProperty(parentName.substring(parentName.indexOf("#"))).getValue("end").stringValue();
+        	
+        	if(getClassDeclarationCount(parentName) == 0) {
+        	/* fine add */
+        		throw new IllegalArgumentException("SuperClass " + parentName + " does not exist");
+        	/* giaisg 20180323 add */
+        	}
+        	/* fine add */
+        	            
         }
 
         RepositoryConnection con = null;
@@ -1203,7 +1316,17 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
 
         className = Util.getGlobalName(getImplicitNamespace(), className);
         if (getClassDeclarationCount(className) == 0) {
-            throw new IllegalArgumentException("Asset Class " + className + " does not exist");
+
+        	/* giaisg 20180323 add */
+        	logger.warn("Asset Class " + className + " does not exist. Try to find right namespace.");
+        	className = getNamespaceToIndividualOrProperty(className.substring(className.indexOf("#")+1)).getValue("end").stringValue();
+        	
+        	if(getClassDeclarationCount(className) == 0) {
+        	/* fine add */
+        		throw new IllegalArgumentException("Asset Class " + className + " does not exist");
+        	/* giaisg 20180323 add */
+        	}
+        	/* fine add */
         }
 
         List<Statement> statements = new ArrayList<Statement>();
@@ -1381,10 +1504,10 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
             throw new IllegalArgumentException("Individual name is mandatory");
         }
 
-        if (!Util.isLocalName(individualName)) {
+       /* if (!Util.isLocalName(individualName)) {
             throw new IllegalArgumentException(
                     "Individual name must not be qualified by a namespace: " + individualName);
-        }
+        }*/
 
         individualName = Util.getGlobalName(getImplicitNamespace(), individualName);
         if (null == getIndividualDeclaration(individualName)) {
@@ -1462,7 +1585,7 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         List<IndividualItem> items = new ArrayList<IndividualItem>();
         List<BindingSet> results = executeSelect(qs);
         for (BindingSet result : results) {
-            items.add(getIndividualItem(result, className));
+        	items.add(getIndividualItem(result, className));
         }
         return items;
     }
@@ -1471,7 +1594,7 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         String name = s.getValue("name").stringValue();
         String clazz = null != className ? className : s.getValue("class").stringValue();
         if (name.contains("#"))
-            return new IndividualItem(name.substring(0, name.indexOf("#") + 1), name, clazz);
+        	return new IndividualItem(name.substring(0, name.indexOf("#") + 1), name, clazz);
         return new IndividualItem(getImplicitNamespace(), name, clazz);
     }
 
@@ -1562,7 +1685,13 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
     }
 
     private IndividualItem getIndividualDeclarationImpl(String name, String namespace) {
-        IndividualItem item = null;
+    	/* giaisg 20180313 add */
+    	if(name.startsWith(namespace)) {
+    		name = name.replace(namespace, "");
+    	}
+    	/* fine add */
+
+    	IndividualItem item = null;
         String qs = QUERY_SINGLE_INDIVIDUAL.replace(VARTAG, name);
         List<BindingSet> results = executeSelect(qs);
         for (BindingSet result : results) {
@@ -1606,8 +1735,21 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
     }
 
     private String getPropertyValue(String individualName, String propertyName) throws RuntimeException {
+    	/* giaisg 20180313 add */
+    	if(individualName.indexOf("#") > 0) {
+    		individualName = individualName.substring(individualName.indexOf("#"));
+    	}
+    	
+    	if(propertyName.indexOf("#") > 0) {
+    		propertyName = propertyName.substring(propertyName.indexOf("#"));
+    	}    	
+    	/* fine add */
+    	
         // assuming both arguments are absolute URIs
         String qs = QUERY_PROP_FOR_INDIVIDUAL.replace(VARTAG, individualName).replace(VARTAG2, propertyName);
+        
+        System.out.println("qs = " + qs);
+        
         List<BindingSet> results = executeSelect(qs);
         if (results.size() > 0) {
             return results.get(0).getBinding("value").getValue().stringValue();
@@ -1652,6 +1794,10 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
 
 	private void setProperty(String name, String individualName, String value, Class<?> type, boolean dataProp, String namespace)
             throws IllegalArgumentException, RuntimeException {
+		
+		System.out.println("setProperty(" + name + ", " + individualName + ", " + value + ", "
+				+ type + ", " + dataProp + ", " + namespace + ")");
+		
         if (null == name || name.length() == 0) {
             throw new IllegalArgumentException("Property name is mandatory");
         }
@@ -1778,18 +1924,54 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         }
 
         // execute update
-        removeAllStatements(indivUri, propUri, null);
+        //removeAllStatements(indivUri, propUri, null);
         addStatements(statements);
     }
 
     private List<BindingSet> executeSelect(String query) {
+    	logger.info("query -> " + query);    	
+    	
         List<BindingSet> results = new ArrayList<BindingSet>();
         RepositoryConnection con = null;
         try {
             con = repo.getConnection();
+            
+           /* RepositoryResult<Namespace> rr = con.getNamespaces();
+            
+            Map<String,String> namespacesMap = new HashMap<String,String>();
+            
+            while (rr.hasNext()) {
+				Namespace n = rr.next();
+				namespacesMap.put(n.getName(), n.getPrefix());
+			}*/
+                                   
             TupleQueryResult r = con.prepareTupleQuery(QueryLanguage.SPARQL, query).evaluate();
             while (r.hasNext()) {
-                results.add(r.next());
+            	BindingSet originalBindingSet = r.next();
+            	BindingSet bindingSetToAdd = new MapBindingSet();
+            	            	
+            	Set<String> bn = originalBindingSet.getBindingNames();
+
+            	for (String string : bn) {
+            		Binding b = originalBindingSet.getBinding(string);
+            		if(b == null) {
+            			((MapBindingSet)bindingSetToAdd).addBinding(string, null);
+            		} else {
+            			String value = b.getValue().stringValue();
+            			String uri = value.substring(0, value.indexOf("#") + 1);
+            			
+            			if(LoadNamespaceSingleton.getInstance(repo).existURI(uri) 
+            					&& !value.contains(OWL.THING.stringValue())) {
+            				//Value v = SimpleValueFactory.getInstance().createLiteral(value.replace(uri, namespacesMap.get(uri)+":"));
+            				Value v = SimpleValueFactory.getInstance().createLiteral(value.replace(uri, ""));
+            				((MapBindingSet)bindingSetToAdd).addBinding(string, v);
+            			} else {
+            				((MapBindingSet)bindingSetToAdd).addBinding(b);
+            			}
+            		}
+            	}
+           	
+                results.add(bindingSetToAdd);
             }
         } catch (RepositoryException e) {
             throw new RuntimeException(e);
@@ -1813,12 +1995,45 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         return results;
     }
 
+    private List<BindingSet> executeSelectWithoutNamespaceRemove(String query) {
+    	logger.info("query -> " + query);    	
+
+    	List<BindingSet> results = new ArrayList<BindingSet>();
+    	RepositoryConnection con = null;
+    	try {
+    		con = repo.getConnection();
+    		TupleQueryResult r = con.prepareTupleQuery(QueryLanguage.SPARQL, query).evaluate();
+    		while (r.hasNext()) {
+    			results.add(r.next());
+    		}
+    	} catch (RepositoryException e) {
+    		throw new RuntimeException(e);
+    	} catch (MalformedQueryException e) {
+    		throw new RuntimeException(e);
+    	} catch (QueryEvaluationException e) {
+    		throw new RuntimeException(e);
+    	} catch (Exception e) {
+    		throw new RuntimeException(e);
+    	} finally {
+    		if (null != con) {
+    			try {
+    				con.close();
+    			} catch (RepositoryException e) {
+    				e.printStackTrace();
+    			} catch (Exception e) {
+    				e.printStackTrace();
+    			}
+    		}
+    	}
+    	return results;
+    }
+
     private void addStatements(List<Statement> statements) {
-        RepositoryConnection con = null;
-        try {
-            con = getConnection();
-            if (!isInTransaction())
-                con.begin(IsolationLevels.SERIALIZABLE);
+    	RepositoryConnection con = null;
+    	try {
+    		con = getConnection();
+    		if (!isInTransaction())
+    			con.begin(IsolationLevels.SERIALIZABLE);
             for (Statement statement : statements) {
                 con.add(statement);
             }
@@ -1846,18 +2061,59 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         }
     }
 
-	private void removeAllStatements(Resource subject, URI predicate, Value object) {
+    private void removeAllStatements(Resource subject, URI predicate, Value object) {
+    	boolean result = realRemoveAllStatements(subject, predicate, object);
+    	if(!result) {
+    		Resource subjectWithRightNamespace = null;
+    		URI predicateWithRightNamespace = null;
+        	
+        	String subjectEnd = subject.stringValue().substring(subject.stringValue().indexOf("#")+1);
+        	BindingSet subjectWithNamespaceBindingSet = getNamespaceToIndividualOrProperty(subjectEnd);
+        	String subjectWithNamespaceString = subjectWithNamespaceBindingSet.getValue("end").stringValue();
+        	
+        	subjectWithRightNamespace = SimpleValueFactory.getInstance().createIRI(subjectWithNamespaceString);
+        	
+        	//subjectWithRightNamespace = (Resource)((IRI)new URIImpl(subjectWithNamespaceString)); 
+        	
+        	if(predicate != null) {
+        		String predicateEnd = predicate.stringValue().substring(predicate.stringValue().indexOf("#")+1);
+        		BindingSet predicateWithNamespaceBindingSet = getNamespaceToIndividualOrProperty(predicateEnd);
+        		String predicateWithNamespaceString = predicateWithNamespaceBindingSet.getValue("end").stringValue();
+        		
+        		predicateWithRightNamespace = SimpleValueFactory.getInstance().createIRI(predicateWithNamespaceString);
+        	}
+        	
+    		realRemoveAllStatements(subjectWithRightNamespace, predicateWithRightNamespace, object);
+    	}
+    	
+    }
+    
+	private boolean realRemoveAllStatements(Resource subject, URI predicate, Value object) {
         RepositoryConnection con = null;
         try {
             con = getConnection();
             if (!isInTransaction())
                 con.begin(IsolationLevels.READ_COMMITTED);
             RepositoryResult<Statement> statements = con.getStatements(subject, predicate, object, false);
-            while (statements.hasNext()) {
-                con.remove(statements.next());
+            if(!statements.hasNext()) {
+            	return false;           	
             }
-            if (!isInTransaction())
-                con.commit();
+
+            int i = 1;
+        	while (statements.hasNext()) {
+        		Statement curr = statements.next();
+        		System.err.println(curr);
+        		con.remove(curr);
+        		i++;
+        	}
+            System.err.println("\n\nstatements count " + i);        	
+        	
+            if (!isInTransaction()) {
+            	System.out.println("COMMIT");            	
+            	con.commit();
+            }
+            
+            return true;            
         } catch (RepositoryException e) {
             if (null != con) {
                 try {
