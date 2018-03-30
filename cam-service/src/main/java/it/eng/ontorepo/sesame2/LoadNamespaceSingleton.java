@@ -10,6 +10,8 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.eclipse.rdf4j.repository.base.AbstractRepository;
 
+import it.eng.ontorepo.Util;
+
 public class LoadNamespaceSingleton {
 
 	private static LoadNamespaceSingleton instance;
@@ -58,6 +60,15 @@ public class LoadNamespaceSingleton {
 			}
 		}
 		return null;
+	}
+	
+	public String switchUriWithNamespace(String uri) {
+		String prefixUri = uri.substring(0, uri.indexOf(Util.PATH_TERM) + 1);
+		
+		if(existURI(prefixUri)) {
+			return getNamespace(prefixUri) + Util.NS_SEP + uri.substring(uri.indexOf(Util.PATH_TERM) + 1);
+		}
+		return uri;
 	}
 	
 }
