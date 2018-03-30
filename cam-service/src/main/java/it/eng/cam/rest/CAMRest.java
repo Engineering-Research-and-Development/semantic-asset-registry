@@ -24,6 +24,7 @@ import it.eng.ontorepo.OrionConfig;
 import it.eng.ontorepo.PropertyDeclarationItem;
 import it.eng.ontorepo.PropertyValueItem;
 import it.eng.ontorepo.RepositoryDAO;
+import it.eng.ontorepo.Util;
 import it.eng.ontorepo.query.sparql.SparqlQueryFactory;
 import it.eng.ontorepo.reasoner.pellet.PelletReasonerFactory;
 
@@ -325,8 +326,7 @@ public class CAMRest {
         try {
             repoInstance = SesameRepoManager.getRepoInstance(getClass());
             List<PropertyValueItem> individualAttributes = CAMRestImpl.getIndividualAttributes(repoInstance, assetName);
-            
-            
+                        
             /* giaisg add for debug */
             for (PropertyValueItem pvi : individualAttributes) {
 				System.err.println("normalizedValue=" + pvi.getNormalizedValue() + "\tnormalizedName=" + pvi.getNormalizedName()); 
@@ -334,8 +334,12 @@ public class CAMRest {
             /* end add */
             
             return individualAttributes.stream()
-                    .filter(item -> !item.getNormalizedValue().equals(OWL.OBJECTPROPERTY.stringValue())
-                           // && !item.getNormalizedName().contains("system")
+                    /* giaisg modify
+                    .filter(item -> !item.getNormalizedValue().equals(OWL.OBJECTPROPERTY.stringValue())*/
+            		.filter(item -> (!item.getNormalizedValue().equals(OWL.OBJECTPROPERTY.stringValue())
+            				&& !item.getNormalizedValue().equals("ObjectProperty"))
+            		/* end modify */
+                            && !item.getNormalizedName().contains("system")
                     )
                     .collect(Collectors.toList());
         } catch (Exception e) {
@@ -484,8 +488,9 @@ public class CAMRest {
 			}
             
             return individualAttributes.stream()
-                    .filter(item -> item.getNormalizedValue().equals(OWL.OBJECTPROPERTY.stringValue())
-                            //&& !item.getNormalizedName().contains("system")
+                    .filter(item -> (item.getNormalizedValue().equals(OWL.OBJECTPROPERTY.stringValue())
+                    		|| item.getNormalizedValue().equals("ObjectProperty"))
+                            && !item.getNormalizedName().contains("system")
                             )
                     .collect(Collectors.toList());
         } catch (Exception e) {
@@ -1353,7 +1358,7 @@ public class CAMRest {
         for (PropertyValueItem propertyValueItem : individualAttributes) {
             try {
                 repoInstance = SesameRepoManager.getRepoInstance(getClass());
-                if (!propertyValueItem.getNormalizedName().contains("#"))
+                if (!propertyValueItem.getNormalizedName().contains(Util.PATH_TERM))
                     CAMRestImpl.removeProperty(repoInstance, individualName, propertyValueItem.getNormalizedName());
             } catch (Exception e) {
                 logger.error(e);
