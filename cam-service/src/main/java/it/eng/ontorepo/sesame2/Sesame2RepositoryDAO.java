@@ -813,8 +813,8 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         name = Util.getGlobalName(namespace, name);
         */
         // System.out.println("VARTAG: "+name);
-        if(!name.startsWith("#")) {
-        	name = "#" + name;
+        if(!name.startsWith(Util.PATH_TERM)) {
+        	name = Util.PATH_TERM + name;
         }
         String qs = QUERY_PROPS_FOR_INDIVIDUAL.replace(VARTAG, name);
         
@@ -1150,7 +1150,7 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         	
         	/* giaisg 20180323 add */
         	logger.warn("Class " + parentName + " does not exist. Try to find right namespace.");
-        	parentName = getNamespaceToIndividualOrProperty(parentName.substring(parentName.indexOf("#"))).getValue("end").stringValue();
+        	parentName = getNamespaceToIndividualOrProperty(parentName.substring(parentName.indexOf(Util.PATH_TERM))).getValue("end").stringValue();
         	
         	if(getClassDeclarationCount(parentName) == 0) {
         	/* fine add */
@@ -1319,7 +1319,7 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
 
         	/* giaisg 20180323 add */
         	logger.warn("Asset Class " + className + " does not exist. Try to find right namespace.");
-        	className = getNamespaceToIndividualOrProperty(className.substring(className.indexOf("#")+1)).getValue("end").stringValue();
+        	className = getNamespaceToIndividualOrProperty(className.substring(className.indexOf(Util.PATH_TERM)+1)).getValue("end").stringValue();
         	
         	if(getClassDeclarationCount(className) == 0) {
         	/* fine add */
@@ -1539,8 +1539,8 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         String sclazz = null != v ? v.stringValue() : OWL.THING.stringValue();
         
         // return new ClassItem(getImplicitNamespace(), clazz, sclazz);
-        if (clazz.contains("#")) {
-            return new ClassItem(clazz.substring(0, clazz.indexOf("#") + 1), clazz, sclazz);
+        if (clazz.contains(Util.PATH_TERM)) {
+            return new ClassItem(clazz.substring(0, clazz.indexOf(Util.PATH_TERM) + 1), clazz, sclazz);
         } else {
         	return new ClassItem(getImplicitNamespace(), clazz, sclazz);
         }
@@ -1593,8 +1593,8 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
     private IndividualItem getIndividualItem(BindingSet s, String className) {
         String name = s.getValue("name").stringValue();
         String clazz = null != className ? className : s.getValue("class").stringValue();
-        if (name.contains("#"))
-        	return new IndividualItem(name.substring(0, name.indexOf("#") + 1), name, clazz);
+        if (name.contains(Util.PATH_TERM))
+        	return new IndividualItem(name.substring(0, name.indexOf(Util.PATH_TERM) + 1), name, clazz);
         return new IndividualItem(getImplicitNamespace(), name, clazz);
     }
 
@@ -1618,8 +1618,8 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
                 String msg = "Individual " + shortName + " cannot be deleted as it is referenced by: ";
                 for (BindingSet bindingSet : dependencies) {
                     String depName = bindingSet.getValue("name").stringValue();
-                    if (depName.contains("#")) {
-                        depName = depName.substring(name.indexOf("#") + 1);
+                    if (depName.contains(Util.PATH_TERM)) {
+                        depName = depName.substring(name.indexOf(Util.PATH_TERM) + 1);
                     }
                     msg += depName + ", ";
                 }
@@ -1736,12 +1736,12 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
 
     private String getPropertyValue(String individualName, String propertyName) throws RuntimeException {
     	/* giaisg 20180313 add */
-    	if(individualName.indexOf("#") > 0) {
-    		individualName = individualName.substring(individualName.indexOf("#"));
+    	if(individualName.indexOf(Util.PATH_TERM) > 0) {
+    		individualName = individualName.substring(individualName.indexOf(Util.PATH_TERM));
     	}
     	
-    	if(propertyName.indexOf("#") > 0) {
-    		propertyName = propertyName.substring(propertyName.indexOf("#"));
+    	if(propertyName.indexOf(Util.PATH_TERM) > 0) {
+    		propertyName = propertyName.substring(propertyName.indexOf(Util.PATH_TERM));
     	}    	
     	/* fine add */
     	
@@ -1958,7 +1958,7 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
             			((MapBindingSet)bindingSetToAdd).addBinding(string, null);
             		} else {
             			String value = b.getValue().stringValue();
-            			String uri = value.substring(0, value.indexOf("#") + 1);
+            			String uri = value.substring(0, value.indexOf(Util.PATH_TERM) + 1);
             			
             			if(LoadNamespaceSingleton.getInstance(repo).existURI(uri) 
             					&& !value.contains(OWL.THING.stringValue())) {
@@ -2067,7 +2067,7 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
     		Resource subjectWithRightNamespace = null;
     		URI predicateWithRightNamespace = null;
         	
-        	String subjectEnd = subject.stringValue().substring(subject.stringValue().indexOf("#")+1);
+        	String subjectEnd = subject.stringValue().substring(subject.stringValue().indexOf(Util.PATH_TERM)+1);
         	BindingSet subjectWithNamespaceBindingSet = getNamespaceToIndividualOrProperty(subjectEnd);
         	String subjectWithNamespaceString = subjectWithNamespaceBindingSet.getValue("end").stringValue();
         	
@@ -2076,7 +2076,7 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         	//subjectWithRightNamespace = (Resource)((IRI)new URIImpl(subjectWithNamespaceString)); 
         	
         	if(predicate != null) {
-        		String predicateEnd = predicate.stringValue().substring(predicate.stringValue().indexOf("#")+1);
+        		String predicateEnd = predicate.stringValue().substring(predicate.stringValue().indexOf(Util.PATH_TERM)+1);
         		BindingSet predicateWithNamespaceBindingSet = getNamespaceToIndividualOrProperty(predicateEnd);
         		String predicateWithNamespaceString = predicateWithNamespaceBindingSet.getValue("end").stringValue();
         		
