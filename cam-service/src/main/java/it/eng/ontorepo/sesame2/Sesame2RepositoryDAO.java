@@ -751,10 +751,15 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         return doGetIndividuals(qs, null);
     }
 
-    private BindingSet getNamespaceToIndividualOrProperty(String subj) throws RuntimeException {
+    private String getNamespaceToIndividualOrProperty(String subj) throws RuntimeException {
     	logger.info("Start getNamespaceToIndividualOrProperty(" + subj + ")");
         if (StringUtils.isBlank(subj))
             throw new IllegalArgumentException("Individual/property is mandatory");
+        if(!subj.startsWith(Util.PATH_TERM)) {
+        	logger.info("add prefix '#' to " + subj);
+        	subj = Util.PATH_TERM + subj;
+        }
+        
         String qs = QUERY_ADD_NAMESPACE_TO_INDIVIDUAL_OR_PROPERTY.replace(VARTAG, subj);
         List<BindingSet> response = executeSelectWithoutNamespaceRemove(qs);
         
@@ -762,7 +767,7 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         	throw new IllegalArgumentException("Individual/property is mandatory");
         }
         
-        return response.get(0);         
+        return response.get(0).getValue("end").stringValue();         
     }
     
     @Override
@@ -1150,7 +1155,7 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         	
         	/* giaisg 20180323 add */
         	logger.warn("Class " + parentName + " does not exist. Try to find right namespace.");
-        	parentName = getNamespaceToIndividualOrProperty(parentName.substring(parentName.indexOf(Util.PATH_TERM))).getValue("end").stringValue();
+        	parentName = getNamespaceToIndividualOrProperty(parentName.substring(parentName.indexOf(Util.PATH_TERM)));
         	
         	if(getClassDeclarationCount(parentName) == 0) {
         	/* fine add */
@@ -1319,7 +1324,7 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
 
         	/* giaisg 20180323 add */
         	logger.warn("Asset Class " + className + " does not exist. Try to find right namespace.");
-        	className = getNamespaceToIndividualOrProperty(className.substring(className.indexOf(Util.PATH_TERM)+1)).getValue("end").stringValue();
+        	className = getNamespaceToIndividualOrProperty(className.substring(className.indexOf(Util.PATH_TERM)+1));
         	
         	if(getClassDeclarationCount(className) == 0) {
         	/* fine add */
@@ -1400,7 +1405,18 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
 
         List<Statement> statements = new ArrayList<Statement>();
         URI assetUri = vf.createURI(name);
-        URI classUri = vf.createURI(model.getOriginalValue()); // class info is
+        URI classUri = null; //vf.createURI(model.getOriginalValue()); // class info is
+        
+        /* 20180404 giaisg add to manage model.getOriginalValue() without namespace */
+        try {
+        	classUri = vf.createURI(model.getOriginalValue()); // class info is
+        } catch (IllegalArgumentException e) {
+        	String withNamespace = getNamespaceToIndividualOrProperty(model.getOriginalValue());
+        	logger.warn("Retry to create classUri using model.getOriginalValue() with namespace (" + withNamespace + ")");		
+        	classUri = vf.createURI(withNamespace);
+		}
+        /* end add */
+        
         // hold by
         // Tuple.originalValue
         statements.add(vf.createStatement(assetUri, RDF.TYPE, classUri));
@@ -2068,8 +2084,7 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
     		URI predicateWithRightNamespace = null;
         	
         	String subjectEnd = subject.stringValue().substring(subject.stringValue().indexOf(Util.PATH_TERM)+1);
-        	BindingSet subjectWithNamespaceBindingSet = getNamespaceToIndividualOrProperty(subjectEnd);
-        	String subjectWithNamespaceString = subjectWithNamespaceBindingSet.getValue("end").stringValue();
+        	String subjectWithNamespaceString = getNamespaceToIndividualOrProperty(subjectEnd);
         	
         	subjectWithRightNamespace = SimpleValueFactory.getInstance().createIRI(subjectWithNamespaceString);
         	
@@ -2077,8 +2092,7 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         	
         	if(predicate != null) {
         		String predicateEnd = predicate.stringValue().substring(predicate.stringValue().indexOf(Util.PATH_TERM)+1);
-        		BindingSet predicateWithNamespaceBindingSet = getNamespaceToIndividualOrProperty(predicateEnd);
-        		String predicateWithNamespaceString = predicateWithNamespaceBindingSet.getValue("end").stringValue();
+        		String predicateWithNamespaceString =  getNamespaceToIndividualOrProperty(predicateEnd);
         		
         		predicateWithRightNamespace = SimpleValueFactory.getInstance().createIRI(predicateWithNamespaceString);
         	}
