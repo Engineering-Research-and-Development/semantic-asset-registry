@@ -176,7 +176,9 @@ public class PropertyDeclarationItem extends Tuple {
                 // if range is not specified, it defaults to String for data properties
                 this.type = String.class;
             }
-        } else {
+        } /* giaisg add*/else if(OWL.ANNOTATIONPROPERTY.stringValue().equals(OWLtype)) {
+        	this.type = String.class;
+        } /* fine add */ else {
             // this is a programming error
             throw new IllegalArgumentException("Unsupported property type: " + type);
         }
