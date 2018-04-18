@@ -2,24 +2,18 @@ package it.eng.ontorepo.reasoner.pellet;
 
 import it.eng.cam.finder.FinderFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.net.URL;
 import java.util.MissingResourceException;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-
-import com.clarkparsia.pellet.sparqldl.jena.SparqlDLExecutionFactory;
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.query.ResultSetFormatter;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.reasoner.Reasoner;
 
 /**
  * 
@@ -35,6 +29,8 @@ public class PelletReasonerFactory {
     private static String SESAME_REPO_URL = null;
     private static String SESAME_REPO_NAME = null;
     private static String SESAME_DOCUMENT_IRI = null;
+    private static String CONTENT_TYPE = "application/json";
+    private static String ACCEPT_CONTENT = "application/json";
     
     static {
         try {
@@ -76,74 +72,53 @@ public class PelletReasonerFactory {
 	 * @throws Exception
 	 */
 	public String executeInferenceQuery(String sparqlQuery) throws Exception {
-		logger.info("Method executeInferenceQuery INIT");
-		
-		if (logger.isDebugEnabled()) {
-			logger.debug("documentIRI --> " + SESAME_DOCUMENT_IRI);
-			logger.debug("sparqlQuery --> " + sparqlQuery);
-		}
-		
-		QueryExecution qe = null;
-		ByteArrayOutputStream outputStream = null;
-		String json = null;
+    	logger.info("Method executeInferenceQuery INIT");
+		if (logger.isDebugEnabled())
+			logger.debug("executeInferenceQuery --> " + sparqlQuery);
+		String JsonResult = null;
 		try {
-			// create Pellet reasoner
-			Reasoner reasoner = org.mindswap.pellet.jena.PelletReasonerFactory.theInstance().create();
+			Client client = ClientBuilder.newClient();
 			
-			OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
-			model.read(SESAME_DOCUMENT_IRI);
-			logger.info("Ontology Model READ from REPO");
-			model.prepare();
+			WebTarget webTarget = client.target(getInferenceServiceURL())
+					.path("SPARQLInferenceQuery");
 			
-			logger.info("Model Successfull prepared!");
+			Invocation.Builder invocationBuilder = webTarget.request(
+					CONTENT_TYPE);
+			invocationBuilder.header("Accept", ACCEPT_CONTENT);
 			
-			//bind the reasoner to the ontology model
-			reasoner = reasoner.bindSchema(model);
+			PelletResonerJSON inputJSON = new PelletResonerJSON();
+			inputJSON.setDocumentURI(SESAME_DOCUMENT_IRI);
+			inputJSON.setSparqlQuery(sparqlQuery);
 			
-			//Bind the reasoner to the data model into a new Inferred model
-			Model infModel = ModelFactory.createInfModel(reasoner,model);
+			Response response = invocationBuilder.post(Entity.entity(
+					inputJSON, CONTENT_TYPE));
 			
-			Query q = QueryFactory.create(sparqlQuery);
-			// Create a SPARQL-DL query execution for the given query and
-			// ontology model
-			qe = SparqlDLExecutionFactory.create(q, infModel);
-
-			// We want to execute a SELECT query, do it, and return the result
-			// set
-			ResultSet rs = qe.execSelect();
-
-			logger.info("Inferred Statement execute with Success!");
+			logger.info("HTTP Response STATUS: " + response.getStatus());
 			
-			// write to a ByteArrayOutputStream
-			outputStream = new ByteArrayOutputStream();
-
-			ResultSetFormatter.outputAsJSON(outputStream, rs);
-
-			// and turn that into a String
-			json = new String(outputStream.toByteArray());
-			
-			if (logger.isDebugEnabled())
-				logger.debug("Reasoner JSON Results --> " + json);
-			
-			outputStream.close();
-			outputStream = null;
-			
+			if (null == response || response.getStatus() != Response.Status.OK.getStatusCode()) {
+	            logger.error("Error in inference query: " + response.getStatus());
+	        } else {
+	        	JsonResult = response.readEntity(String.class);
+	            if (logger.isDebugEnabled())
+	            	logger.debug("Result Inference Query: " + JsonResult);
+	        }
 		} catch (Exception e) {
-			logger.error("Unable to inferred statement", e);
-			throw new Exception(e.getMessage());
-		} finally {
-			if (qe != null)
-				qe.close();
-			if (outputStream != null)
-				try {
-					outputStream.close();
-				} catch (IOException e) {
-					logger.warn("Unable to close ByteArrayOutputStream: " + e.getMessage());
-				}
-		}
-		
-		return json;
-		
+            logger.error("Unable to execute Inference Query");
+            throw new Exception(e.getMessage());
+        }
+		return JsonResult;
+    }
+	
+	/**
+	 * extract server and port from SESAME_REPO_URL
+	 * @return
+	 */
+	private String getInferenceServiceURL() 
+			throws Exception {
+		URL aURL = new URL(SESAME_DOCUMENT_IRI);
+		String url = aURL.getProtocol() + "://" + aURL.getHost() + ":"
+				+ aURL.getPort() + "/A4bluePelletReasoner";
+		return url;
 	}
 	
 }
