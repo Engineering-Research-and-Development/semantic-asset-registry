@@ -151,7 +151,7 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
 
     private static final String QUERY_INDIVIDUALS = "SELECT DISTINCT ?name ?class " + "WHERE { ?name rdf:type ?class; "
             + "              rdf:type owl:NamedIndividual. " + "FILTER(!(?class = owl:NamedIndividual)" +
-            " && " + FILTER_BY_NS_CONTENT +
+            // giaisg delete " && " + FILTER_BY_NS_CONTENT +
             ")} "
             + "ORDER BY ?name";
 
