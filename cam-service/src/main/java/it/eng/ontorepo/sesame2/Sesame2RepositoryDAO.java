@@ -304,8 +304,6 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
 		+ "}";
      /* end add  */
     
-    
-    
     // Modified by @ascatox 2016-04-26 to use MemoryStore in Unit Test
     private AbstractRepository repo;
     private final ValueFactory vf;
