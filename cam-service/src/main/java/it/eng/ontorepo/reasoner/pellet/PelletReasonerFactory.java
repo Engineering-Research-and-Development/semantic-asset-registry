@@ -110,6 +110,50 @@ public class PelletReasonerFactory {
     }
 	
 	/**
+	 * To execute inference SPARQL Update on OWL Ontology. The level of reasoning is OWL_DL_MEM
+	 * @param sparqlUpdate - Query SPARQL to search results on inference
+	 * @return JSON Object
+	 * @throws Exception
+	 */
+	public String executeInferenceUdpate(String sparqlUpdate) throws Exception {
+    	logger.info("Method executeInferenceUdpate INIT");
+		if (logger.isDebugEnabled())
+			logger.debug("executeInferenceUdpate --> " + sparqlUpdate);
+		String JsonResult = null;
+		try {
+			Client client = ClientBuilder.newClient();
+			
+			WebTarget webTarget = client.target(getInferenceServiceURL())
+					.path("SPARQLInferenceUpdate");
+			
+			Invocation.Builder invocationBuilder = webTarget.request(
+					CONTENT_TYPE);
+			invocationBuilder.header("Accept", ACCEPT_CONTENT);
+			
+			PelletResonerJSON inputJSON = new PelletResonerJSON();
+			inputJSON.setDocumentURI(SESAME_DOCUMENT_IRI);
+			inputJSON.setSparqlQuery(sparqlUpdate);
+			
+			Response response = invocationBuilder.post(Entity.entity(
+					inputJSON, CONTENT_TYPE));
+			
+			logger.info("HTTP Response STATUS: " + response.getStatus());
+			
+			if (null == response || response.getStatus() != Response.Status.OK.getStatusCode()) {
+	            logger.error("Error in inference udpate: " + response.getStatus());
+	        } else {
+	        	JsonResult = response.readEntity(String.class);
+	            if (logger.isDebugEnabled())
+	            	logger.debug("Result Inference Update: " + JsonResult);
+	        }
+		} catch (Exception e) {
+            logger.error("Unable to execute Inference Update");
+            throw new Exception(e.getMessage());
+        }
+		return JsonResult;
+    }
+	
+	/**
 	 * extract server and port from SESAME_REPO_URL
 	 * @return
 	 */
