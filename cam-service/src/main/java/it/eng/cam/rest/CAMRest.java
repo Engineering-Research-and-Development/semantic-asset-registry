@@ -244,6 +244,7 @@ public class CAMRest {
                 return AssetOwnershipFilter.filterAll(CAMRestImpl.getIndividualsForChildren(repoInstance, className), securityContext);
             return AssetOwnershipFilter.filterAll(CAMRestImpl.getIndividuals(repoInstance, className), securityContext);
         } catch (Exception e) {
+        	e.printStackTrace();
             logger.error(e);
             throw new CAMServiceWebException(e.getMessage());
         } finally {
@@ -1269,6 +1270,28 @@ public class CAMRest {
         	jsonResults = PelletReasonerFactory.getInstance().executeInferenceQuery(sparqlQuery);
         } catch (Exception e) {
             logger.error("Unable to execute inference Query. Problem with Reasoner", e);
+            throw new CAMServiceWebException(e.getMessage());
+        } 
+        return Response.ok(jsonResults, MediaType.APPLICATION_JSON).build();
+    }
+    
+    @POST
+    @Path("/SPARQLInferenceUpdate")
+    @RolesAllowed({Role.BASIC, Role.ADMIN})
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response SPARQLInferenceUpdate(String sparqlUpdate) {
+    	// check if all form parameters are provided
+		if (sparqlUpdate == null || sparqlUpdate.isEmpty())
+			return Response.status(400).entity("Invalid data input").build();
+
+		String jsonResults = null;
+        try {
+        	jsonResults = PelletReasonerFactory.getInstance().executeInferenceUdpate(sparqlUpdate);
+        	if (jsonResults == null)
+        		jsonResults = "ERROR: SPARQL Update Not Performed!";
+        	
+        } catch (Exception e) {
+            logger.error("Unable to execute inference Update. Problem with Repository", e);
             throw new CAMServiceWebException(e.getMessage());
         } 
         return Response.ok(jsonResults, MediaType.APPLICATION_JSON).build();
