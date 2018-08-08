@@ -1,6 +1,5 @@
 package it.eng.cam.rest.idas;
 
-import it.eng.cam.rest.Constants;
 import it.eng.cam.rest.sesame.SesameRepoManager;
 import it.eng.cam.rest.sesame.dto.AssetJSON;
 import it.eng.ontorepo.BeInCpps;
@@ -67,11 +66,11 @@ public class AssetToIDASMappingTrasformer {
                     || propertyValueItem.getNormalizedName().contains(BeInCpps.instanceOf)
                     || propertyValueItem.getNormalizedName().contains(BeInCpps.syncTo)
                     || propertyValueItem.getPropertyType().getSimpleName().equalsIgnoreCase("Object") //Relationships
-                    || !propertyValueItem.getNormalizedName().toLowerCase().startsWith(Constants.NGSI) //each attribute starts with ngsi
+                   
                     ) continue;
             IDASMappingAttribute attribute = new IDASMappingAttribute();
-            String[] split = propertyValueItem.getNormalizedName().split(Constants.NGSI);
-            attribute.setOcb_id(split[1]);
+            
+            attribute.setOcb_id(propertyValueItem.getNormalizedName());
             attribute.setType(propertyValueItem.getPropertyType().getSimpleName().toLowerCase());
             if (propertyValueItem.getPropertyType().getSimpleName().equalsIgnoreCase(Calendar.class.getSimpleName()))
                 attribute.setType(Date.class.getSimpleName().toLowerCase());

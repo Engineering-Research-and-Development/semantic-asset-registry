@@ -1,6 +1,5 @@
 package it.eng.cam.rest.orion;
 
-import it.eng.cam.rest.Constants;
 import it.eng.cam.rest.orion.context.Attribute;
 import it.eng.cam.rest.orion.context.ContextElement;
 import it.eng.cam.rest.sesame.SesameRepoManager;
@@ -69,11 +68,13 @@ public class AssetToContextTrasformer {
                     || propertyValueItem.getNormalizedName().contains(BeInCpps.instanceOf)
                     || propertyValueItem.getNormalizedName().contains(BeInCpps.syncTo)
                     || propertyValueItem.getPropertyType().getSimpleName().equalsIgnoreCase("Object") //Relationships
-                    || !propertyValueItem.getNormalizedName().toLowerCase().startsWith(Constants.NGSI) //each attribute starts with ngsi
+                    
                     ) continue;
             Attribute attribute = new Attribute();
-            String[] split = propertyValueItem.getNormalizedName().split(Constants.NGSI);
-            attribute.setName(split[1]);
+            /*String[] split = propertyValueItem.getNormalizedName().split(Constants.NGSI);
+            attribute.setName(split[1]);*/
+            attribute.setName(propertyValueItem.getNormalizedName());
+            
             attribute.setType(propertyValueItem.getPropertyType().getSimpleName().toLowerCase());
             if (propertyValueItem.getPropertyType().getSimpleName().equalsIgnoreCase(Calendar.class.getSimpleName()))
                 attribute.setType(Date.class.getSimpleName().toLowerCase());

@@ -478,7 +478,7 @@ public class CAMRestImpl {
         try {
             if (null != assetRetrieved.getAttributes() && !assetRetrieved.getAttributes().isEmpty())
                 for (PropertyValueItem propertyValueItem : assetRetrieved.getAttributes()) {
-                    if (propertyValueItem.getNormalizedName().startsWith(Constants.NGSI)) {
+                   // if (propertyValueItem.getNormalizedName().startsWith(Constants.NGSI)) {
                         if (asset.getAttributes() != null) {
                             long count = asset.getAttributes().stream().filter(attOrig -> attOrig.getNormalizedName().equals(propertyValueItem.getNormalizedName())).count();
                             if (count > 0)
@@ -487,7 +487,7 @@ public class CAMRestImpl {
                         setAttribute(dao, propertyValueItem.getNormalizedName(),
                                 assetRetrieved.getNormalizedName(), propertyValueItem.getPropertyOriginalValue(),
                                 propertyValueItem.getPropertyType().getName());
-                    }
+                    //}
                 }
         } catch (Exception e) {
             logger.error("Error in refreshing: " + e.getMessage());

@@ -12,6 +12,7 @@ import it.eng.cam.rest.security.service.AuthenticationService;
 import it.eng.cam.rest.security.service.impl.IDMKeystoneService;
 import it.eng.cam.rest.security.user.UserLoginJSON;
 import it.eng.cam.rest.sesame.SesameRepoManager;
+import it.eng.cam.rest.sesame.dto.AssetByModelJSON;
 import it.eng.cam.rest.sesame.dto.AssetJSON;
 import it.eng.cam.rest.sesame.dto.AttributeJSON;
 import it.eng.cam.rest.sesame.dto.ClassJSON;
@@ -38,6 +39,7 @@ import java.net.URL;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+
 import java.util.stream.Collectors;
 
 import javax.annotation.security.DeclareRoles;
@@ -278,8 +280,10 @@ public class CAMRest {
         List<PropertyValueItem> individualAttributes = null;
         RepositoryDAO repoInstance = null;
         try {
-            if (isOCBEnabled(assetName))
-                return Response.status(405).entity(OCB_ENABLED_READ_ONLY_MESSAGE).build();
+        	//Modified in 2018-08-03 by Mattia Marzano
+        	//Allow to update asset when OCB is enabled
+           /* if (isOCBEnabled(assetName))
+                return Response.status(405).entity(OCB_ENABLED_READ_ONLY_MESSAGE).build();*/
             repoInstance = SesameRepoManager.getRepoInstance(getClass());
             individualAttributes = CAMRestImpl.getIndividualAttributes(repoInstance, assetName);
             if (individualAttributes != null) {
@@ -381,8 +385,10 @@ public class CAMRest {
     public Response setAttribute(@PathParam("assetName") String assetName, AttributeJSON attribute) {
         RepositoryDAO repoInstance = null;
         try {
-            if (isOCBEnabled(assetName))
-                return Response.status(405).entity(OCB_ENABLED_READ_ONLY_MESSAGE).build();
+        	//Modified in 2018-08-03 by Mattia Marzano
+        	//Allow to update asset when OCB is enabled
+            /*if (isOCBEnabled(assetName))
+                return Response.status(405).entity(OCB_ENABLED_READ_ONLY_MESSAGE).build();*/
             repoInstance = SesameRepoManager.getRepoInstance(getClass());
             CAMRestImpl.setAttribute(repoInstance, attribute.getName(), assetName, attribute.getValue(),
                     attribute.getType());
@@ -414,8 +420,10 @@ public class CAMRest {
                                  @PathParam("attributeName") String attributeName, AttributeJSON attribute) {
         RepositoryDAO repoInstance = null;
         try {
-            if (isOCBEnabled(assetName))
-                return Response.status(405).entity(OCB_ENABLED_READ_ONLY_MESSAGE).build();
+        	//Modified in 2018-08-03 by Mattia Marzano
+        	//Allow to update asset when OCB is enabled
+            /*if (isOCBEnabled(assetName))
+                return Response.status(405).entity(OCB_ENABLED_READ_ONLY_MESSAGE).build();*/
             repoInstance = SesameRepoManager.getRepoInstance(getClass());
             CAMRestImpl.removeProperty(repoInstance, assetName, attributeName);
         } catch (Exception e) {
@@ -681,8 +689,11 @@ public class CAMRest {
     public Response updateAssetModel(@PathParam("modelName") String modelName, AssetJSON model) {
         RepositoryDAO repoInstance = null;
         try {
+        	//Modified in 2018-08-03 by Mattia Marzano
+        	//Allow to update asset when OCB is enabled
+        	/*
             if (isOCBEnabled(modelName))
-                return Response.status(405).entity(OCB_ENABLED_READ_ONLY_MESSAGE).build();
+                return Response.status(405).entity(OCB_ENABLED_READ_ONLY_MESSAGE).build();*/
             repoInstance = SesameRepoManager.getRepoInstance(getClass());
             List<PropertyValueItem> individualAttributes = CAMRestImpl.getIndividualAttributes(repoInstance, modelName);
             if (individualAttributes != null) {
@@ -772,8 +783,10 @@ public class CAMRest {
     public Response setModelAttribute(@PathParam("modelName") String modelName, AttributeJSON attribute) {
         RepositoryDAO repoInstance = null;
         try {
-            if (isOCBEnabled(modelName))
-                return Response.status(405).entity(OCB_ENABLED_READ_ONLY_MESSAGE).build();
+        	//Modified in 2018-08-03 by Mattia Marzano
+        	//Allow to update asset when OCB is enabled
+            /*if (isOCBEnabled(modelName))
+                return Response.status(405).entity(OCB_ENABLED_READ_ONLY_MESSAGE).build();*/
             repoInstance = SesameRepoManager.getRepoInstance(getClass());
             CAMRestImpl.setAttribute(repoInstance, attribute.getName(), modelName, attribute.getValue(),
                     attribute.getType());
@@ -805,8 +818,10 @@ public class CAMRest {
                                       @PathParam("attributeName") String attributeName, AttributeJSON attribute) {
         RepositoryDAO repoInstance = null;
         try {
-            if (isOCBEnabled(modelName))
-                return Response.status(405).entity(OCB_ENABLED_READ_ONLY_MESSAGE).build();
+        	//Modified in 2018-08-03 by Mattia Marzano
+        	//Allow to update asset when OCB is enabled
+            /*if (isOCBEnabled(modelName))
+                return Response.status(405).entity(OCB_ENABLED_READ_ONLY_MESSAGE).build();*/
             repoInstance = SesameRepoManager.getRepoInstance(getClass());
             CAMRestImpl.removeProperty(repoInstance, modelName, attributeName);
         } catch (Exception e) {
@@ -1391,7 +1406,167 @@ public class CAMRest {
             }
         }
     }
-
+    
+    @POST
+    @Path("/assetbymodel")
+    @RolesAllowed({Role.BASIC, Role.ADMIN})
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response createAssetModelByModel( @QueryParam("linkToOCB") boolean linkToOCB, AssetByModelJSON model) {
+        RepositoryDAO repoInstance = null;
+        try {
+            repoInstance = SesameRepoManager.getRepoInstance(getClass());
+            CAMRestImpl.createAssetModel(repoInstance, model.getAssetName(), model.getClassName(), model.getDomainName());       
+        } catch (Exception e) {
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+        } 
+        
+        try {
+        	for( AttributeJSON attribute : model.getAttribute()) {
+                    
+        		CAMRestImpl.setAttribute(repoInstance, attribute.getName(), model.getAssetName(), attribute.getValue(),
+        				attribute.getType());
+        	}
+        	if (linkToOCB) {
+            	try {
+            		AssetJSON asset = new AssetJSON(model.getAssetName(), model.getClassName(), model.getModelName(), model.getDomainName(), model.getOrionConfigId());
+            		ArrayList<AssetJSON> assetJSONs = new ArrayList<AssetJSON>();
+            		assetJSONs.add(asset);
+            		CAMRestImpl.sendContexts(repoInstance, assetJSONs, true);
+            		
+                } catch (Exception e) {
+                	 logger.error(e);
+                     throw new CAMServiceWebException(e.getMessage());
+                } 
+            }
+        	
+        	return Response.ok("Asset was successfully created!").build();
+            
+           	   
+       }   
+        
+        catch (IllegalArgumentException e) {
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+        } catch (ClassNotFoundException e) {
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+        } catch (RuntimeException e) {
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+        } catch (Exception e) {
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+        }
+                	
+        finally {
+            SesameRepoManager.releaseRepoDaoConn(repoInstance);
+        }
+    }
+    
+    
+    
+    @PUT
+    @Path("/assetbymodel")
+    @RolesAllowed({Role.BASIC, Role.ADMIN})
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateAssetModelByModel(AssetByModelJSON model) {
+        RepositoryDAO repoInstance = null;
+        try {
+            
+        	repoInstance = SesameRepoManager.getRepoInstance(getClass());
+        	List<PropertyValueItem> individualAttributes = CAMRestImpl.getIndividualAttributes(repoInstance, model.getAssetName());
+            if (individualAttributes != null) {
+            	AssetJSON editasset = new AssetJSON(model.getAssetName(), model.getClassName(), model.getModelName(), model.getDomainName(), model.getOrionConfigId());
+                CAMRestImpl.editAsset(repoInstance, model.getAssetName(), editasset);
+                }
+                   
+        } catch (Exception e) {
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+        } 
+        
+        try {
+        	for( AttributeJSON attribute : model.getAttribute()) {
+        		
+        		repoInstance = SesameRepoManager.getRepoInstance(getClass());
+                CAMRestImpl.removeProperty(repoInstance, model.getAssetName(), attribute.getName());
+        		CAMRestImpl.setAttribute(repoInstance, attribute.getName(), model.getAssetName(), attribute.getValue(), attribute.getType());
+        	}
+        	if (isOCBEnabled(model.getAssetName())) {
+            	try {
+            		AssetJSON asset = new AssetJSON(model.getAssetName(), model.getClassName(), model.getModelName(), model.getDomainName(), model.getOrionConfigId());
+            		ArrayList<AssetJSON> assetJSONs = new ArrayList<AssetJSON>();
+            		assetJSONs.add(asset);
+            		CAMRestImpl.sendContexts(repoInstance, assetJSONs, true);
+            		
+                } catch (Exception e) {
+                	 logger.error(e);
+                     throw new CAMServiceWebException(e.getMessage());
+                } 
+            }
+        	
+        	return Response.ok("Asset was successfully created!").build();
+            
+           	   
+       }   
+        
+        catch (IllegalArgumentException e) {
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+        } catch (RuntimeException e) {
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+        } catch (Exception e) {
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+        }
+                	
+        finally {
+            SesameRepoManager.releaseRepoDaoConn(repoInstance);
+        }
+    }
+    
+    @POST
+    @Path("/OCBLinkByClass")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({Role.BASIC, Role.ADMIN})
+    public ArrayList<AssetJSON> OCBLinkByClass(AssetJSON asset) {
+    	RepositoryDAO repoInstance = null;
+        
+        
+    	ArrayList<AssetJSON> assetJSONs = new ArrayList<AssetJSON>();    	    	
+        try {
+            repoInstance = SesameRepoManager.getRepoInstance(getClass());
+            for( Asset assetlist : CAMRestImpl.getIndividuals(repoInstance, asset.getClassName())) {
+            	
+            	AssetJSON sent = new AssetJSON(assetlist.getIndividualName() , asset.getClassName(), asset.getModelName(), asset.getDomainName(), asset.getOrionConfigId());
+            	assetJSONs.add(sent);
+        		
+        	};
+        
+            
+        } catch (Exception e) {
+        	e.printStackTrace();
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+            
+        } try {
+            repoInstance = SesameRepoManager.getRepoInstance(getClass());
+            CAMRestImpl.sendContexts(repoInstance, assetJSONs, true);
+        	return assetJSONs;
+        	
+         } catch (Exception e) {
+        	e.printStackTrace();
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+            
+        }
+        finally {
+            SesameRepoManager.releaseRepoDaoConn(repoInstance);
+        }
+    }
+    
     /**
      * If an asset is linked to the OCB is not possible to modify the asset is READ ONLY.
      * Every change should come from OCB.
