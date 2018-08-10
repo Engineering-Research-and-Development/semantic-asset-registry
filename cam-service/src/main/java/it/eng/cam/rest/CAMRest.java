@@ -28,6 +28,8 @@ import it.eng.ontorepo.RepositoryDAO;
 import it.eng.ontorepo.Util;
 import it.eng.ontorepo.query.sparql.SparqlQueryFactory;
 import it.eng.ontorepo.reasoner.pellet.PelletReasonerFactory;
+import it.eng.ontorepo.spraqltemplate.GetModel;
+
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -38,6 +40,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import java.util.stream.Collectors;
@@ -67,6 +70,8 @@ import org.apache.log4j.Logger;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @DeclareRoles({Role.BASIC, Role.ADMIN})  //Add new Roles if needed
 @Path("/")
@@ -79,7 +84,8 @@ public class CAMRest {
 
     public CAMRest() {
     }
-
+   
+    
     /**
      * author ascatox the param flat = true gives a FLAT list of all classes
      *
@@ -1408,30 +1414,47 @@ public class CAMRest {
     }
     
     @POST
-    @Path("/assetbymodel")
+    @Path("/orion/assetbymodel")
     @RolesAllowed({Role.BASIC, Role.ADMIN})
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response createAssetModelByModel( @QueryParam("linkToOCB") boolean linkToOCB, AssetByModelJSON model) {
+    public Response createAssetModelByModel( @QueryParam("link") boolean linkToOCB, AssetJSON model) {
         RepositoryDAO repoInstance = null;
         try {
+        	
             repoInstance = SesameRepoManager.getRepoInstance(getClass());
-            CAMRestImpl.createAssetModel(repoInstance, model.getAssetName(), model.getClassName(), model.getDomainName());       
+            CAMRestImpl.createAssetModel(repoInstance, model.getName(), model.getClassName(), model.getDomainName());       
         } catch (Exception e) {
             logger.error(e);
             throw new CAMServiceWebException(e.getMessage());
         } 
         
         try {
-        	for( AttributeJSON attribute : model.getAttribute()) {
-                    
-        		CAMRestImpl.setAttribute(repoInstance, attribute.getName(), model.getAssetName(), attribute.getValue(),
-        				attribute.getType());
+        	
+        	GetModel sparqlQuery = new GetModel();
+        	String jsonResults = null;
+            jsonResults = SparqlQueryFactory.getInstance().sparqlQuery(sparqlQuery.querystring("Event", model.getClassName()));
+            
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(jsonResults);
+            
+            ArrayList<String> attname = new ArrayList<String>();
+            for( JsonNode attributeloop : jsonNode.get("results").get("bindings")) {
+            	String[] parts = attributeloop.get("o").get("value").textValue().split("#");
+            	attname.add(parts[1]);    
+            	
         	}
+                   
+            for (Iterator<String> iterator = attname.iterator(); iterator.hasNext();) {
+				String attributename = iterator.next();
+				CAMRestImpl.setAttribute(repoInstance, attributename, model.getName(), "", "java.lang.String");
+			}
+        	
+        	attname = new ArrayList<String>();
         	if (linkToOCB) {
             	try {
-            		AssetJSON asset = new AssetJSON(model.getAssetName(), model.getClassName(), model.getModelName(), model.getDomainName(), model.getOrionConfigId());
+
             		ArrayList<AssetJSON> assetJSONs = new ArrayList<AssetJSON>();
-            		assetJSONs.add(asset);
+            		assetJSONs.add(model);
             		CAMRestImpl.sendContexts(repoInstance, assetJSONs, true);
             		
                 } catch (Exception e) {
@@ -1442,7 +1465,7 @@ public class CAMRest {
         	
         	return Response.ok("Asset was successfully created!").build();
             
-           	   
+         	   
        }   
         
         catch (IllegalArgumentException e) {
@@ -1464,16 +1487,18 @@ public class CAMRest {
         }
     }
     
+  
+    
     
     
     @PUT
-    @Path("/assetbymodel")
+    @Path("/orion/assetbymodel")
     @RolesAllowed({Role.BASIC, Role.ADMIN})
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateAssetModelByModel(AssetByModelJSON model) {
+    	
         RepositoryDAO repoInstance = null;
         try {
-            
         	repoInstance = SesameRepoManager.getRepoInstance(getClass());
         	List<PropertyValueItem> individualAttributes = CAMRestImpl.getIndividualAttributes(repoInstance, model.getAssetName());
             if (individualAttributes != null) {
@@ -1528,7 +1553,7 @@ public class CAMRest {
     }
     
     @POST
-    @Path("/OCBLinkByClass")
+    @Path("/orion/class/assetbymodel")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed({Role.BASIC, Role.ADMIN})
     public ArrayList<AssetJSON> OCBLinkByClass(AssetJSON asset) {
@@ -1567,6 +1592,8 @@ public class CAMRest {
         }
     }
     
+     
+    
     /**
      * If an asset is linked to the OCB is not possible to modify the asset is READ ONLY.
      * Every change should come from OCB.
@@ -1591,5 +1618,8 @@ public class CAMRest {
         if (count > 0) return true;
         return false;
     }
+       
 }
+
+
 
