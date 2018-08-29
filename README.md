@@ -104,8 +104,8 @@ in **Home** page, in **Applications** section, **Register** a new application wi
 | Data        | Value                                           | 
 | ------------- |:---------------------------------------------:| 
 | Name		| Semantic Asset Registry (SAR) 	                | 
-| URL           | http://localhost:8080/SAR                     | 
-| Callback URL  | http://localhost:8080/SAR/oauth_callback.html |
+| URL           | http://localhost:8080/CAM                     | 
+| Callback URL  | http://localhost:8080/CAM/oauth_callback.html |
 
 **2**. Click next to register data.<br/>
 **3**. In **Applications** section open SAR Application and in **OAuth2 Credentials** copy your **Client ID**.
