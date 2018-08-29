@@ -317,7 +317,7 @@
                 <keystone.admin.password>idm</keystone.admin.password> <!-- INSERT PASSWORD -->
                 <!-- KEYSTONE -->
                 <!-- END KEYROCK IDM SECTION -->
-                <tomcat.output.dir>>${project.basedir}/target</tomcat.output.dir>
+                <tomcat.output.dir>${project.basedir}/target</tomcat.output.dir>
                 <authentication.service.status>NONE</authentication.service.status>
             </properties>
         </profile>
