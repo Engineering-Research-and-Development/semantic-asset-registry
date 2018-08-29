@@ -72,7 +72,7 @@ camApp.factory('entityManager', ['$q', '$http', '${authentication.service}', fun
     }
 
     entityManager.getAttributesForIndividual = function (individualName) {
-        if (auth.isLoggedIn()) 
+        if (auth.isLoggedIn())
         	return $http.get(BACK_END_URL_CONST + '/assets/' + individualName + '/attributes');
         else
             return rejectNotLoggedCall();

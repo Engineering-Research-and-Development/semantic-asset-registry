@@ -16,6 +16,7 @@ import it.eng.cam.rest.sesame.dto.AssetByModelJSON;
 import it.eng.cam.rest.sesame.dto.AssetJSON;
 import it.eng.cam.rest.sesame.dto.AttributeJSON;
 import it.eng.cam.rest.sesame.dto.ClassJSON;
+import it.eng.cam.rest.sesame.dto.OCBSubscriptionJSON;
 import it.eng.cam.rest.sesame.dto.RelationshipJSON;
 import it.eng.cam.rest.sesame.utility.SesameRepoUtility;
 import it.eng.ontorepo.Asset;
@@ -36,6 +37,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.StandardCopyOption;
@@ -48,6 +50,10 @@ import java.util.stream.Collectors;
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonValue;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -59,12 +65,20 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
@@ -1558,9 +1572,9 @@ public class CAMRest {
     @RolesAllowed({Role.BASIC, Role.ADMIN})
     public ArrayList<AssetJSON> OCBLinkByClass(AssetJSON asset) {
     	RepositoryDAO repoInstance = null;
-        
-        
-    	ArrayList<AssetJSON> assetJSONs = new ArrayList<AssetJSON>();    	    	
+    	
+    	ArrayList<AssetJSON> assetJSONs = new ArrayList<AssetJSON>();   
+    	
         try {
             repoInstance = SesameRepoManager.getRepoInstance(getClass());
             for( Asset assetlist : CAMRestImpl.getIndividuals(repoInstance, asset.getClassName())) {
@@ -1591,6 +1605,85 @@ public class CAMRest {
             SesameRepoManager.releaseRepoDaoConn(repoInstance);
         }
     }
+    
+    @POST
+    @Path("/orion/class/subscription")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({Role.BASIC, Role.ADMIN})
+    public String OCBSubscriptionbyclass(OCBSubscriptionJSON ocbSub) {
+    	RepositoryDAO repoInstance = null;
+    	repoInstance = SesameRepoManager.getRepoInstance(getClass());
+    	 	
+    	try {
+    	String subscription = CAMRestImpl.buildSubJSON(ocbSub, repoInstance);
+    	
+    	HttpClient httpclient = HttpClients.createDefault();
+    	HttpPost httppost = new HttpPost(Constants.OCB_URL+"/v2/subscriptions");
+    	StringEntity body = new StringEntity(subscription);
+    	httppost.setEntity(body);    	
+    	httppost.setHeader("fiware-service", Constants.DEFAULT_SERVICE);
+    	httppost.setHeader("fiware-servicepath", Constants.DEFAULT_SUB_SERVICE);
+    	httppost.setHeader("Accept", "application/json");
+    	httppost.setHeader("Content-Type", "application/json");    	
+    	
+    	HttpResponse response = httpclient.execute(httppost);
+    	HttpEntity entity = response.getEntity();
+
+    	if (entity != null) {
+    	    InputStream instream = entity.getContent();
+    	    try {
+    	    	
+    	    	
+    	    } finally {
+    	        instream.close();
+    	    }
+    	}
+    	    	
+        return subscription;
+                   
+        } catch (Exception e) {
+        	e.printStackTrace();
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+            
+        } 
+        finally {
+            SesameRepoManager.releaseRepoDaoConn(repoInstance);
+        }
+    }
+    
+    @POST
+    @Path("/orion/notification")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({Role.BASIC, Role.ADMIN})
+    public Response refreshOnNotification(@Context HttpHeaders headers, String json) {
+    	
+    	
+        RepositoryDAO repoInstance = null;
+        
+        
+        try {
+        	ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(json);
+            
+            String assetName = jsonNode.get("data").get(0).get("id").textValue();
+            repoInstance = SesameRepoManager.getRepoInstance(getClass());
+            if (!isOCBEnabled(assetName))
+                return Response.status(405).entity("Individual " + assetName + " is not linked to Orion").build();
+            CAMRestImpl.refreshAssetFromOCB(repoInstance, assetName);
+        	
+            return Response.ok(
+                    "Data refreshing from OCB for Individual was successful!")
+                    .build();
+        } catch (Exception e) {
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+        } finally {
+            SesameRepoManager.releaseRepoDaoConn(repoInstance);
+        }
+    }
+
     
      
     

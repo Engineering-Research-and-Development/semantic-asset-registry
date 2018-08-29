@@ -12,6 +12,7 @@ import it.eng.cam.rest.security.project.Project;
 import it.eng.cam.rest.security.service.impl.IDMKeystoneService;
 import it.eng.cam.rest.sesame.SesameRepoManager;
 import it.eng.cam.rest.sesame.dto.AssetJSON;
+import it.eng.cam.rest.sesame.dto.OCBSubscriptionJSON;
 import it.eng.ontorepo.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
@@ -21,6 +22,10 @@ import java.net.MalformedURLException;
 import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
 
 public class CAMRestImpl {
     
@@ -494,8 +499,7 @@ public class CAMRestImpl {
             throw new Exception(e);
         }
     }
-
-
+   
     private static String normalizeClassName(String normName) {
         if (null != normName && normName.contains("#") && !normName.contains("system"))
             return normName.substring(normName.indexOf("#") + 1);
@@ -514,5 +518,40 @@ public class CAMRestImpl {
         dao = SesameRepoManager.restartRepoDaoConn(dao);
         return dao;
     }
+
+	public static String buildSubJSON(OCBSubscriptionJSON ocbSub, RepositoryDAO repoInstance) throws Exception {
+		JsonArrayBuilder entitySub = Json.createArrayBuilder();
+        
+        for( Asset assetlist : CAMRestImpl.getIndividuals(repoInstance, ocbSub.getClassName())) {
+        	JsonObject entityObj = Json.createObjectBuilder()
+        			.add("id", assetlist.getIndividualName())
+        			.add("type", ocbSub.getClassName())                        
+                    .build();
+        	
+        	entitySub.add(entityObj);
+    		
+    	};
+    	
+    	String subscription = Json.createObjectBuilder()
+    			.add("description", ocbSub.getDescription())
+    			.add("subject",Json.createObjectBuilder()
+    					.add("entities", entitySub)
+    				    .add("condition", Json.createObjectBuilder()
+            					.add("attrs", Json.createArrayBuilder().build())
+            				    .build())
+    				    .build())
+    			
+    			.add("notification", Json.createObjectBuilder()
+    					.add("http", Json.createObjectBuilder()
+            					.add("url", ocbSub.getUrlCallback())
+            				    .build())
+    					.add("attrs", Json.createArrayBuilder().build())
+    				    .build())
+                .build()
+                .toString();
+    	
+    return subscription;
+		
+	}
 
 }

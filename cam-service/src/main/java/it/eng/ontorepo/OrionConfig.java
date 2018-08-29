@@ -14,7 +14,8 @@ public class OrionConfig implements Serializable {
     private String url;
     private String service;
     private String servicePath;
-
+    private String orionUrl;
+    
     //Constants
     public static final String hasURL = "hasURL";
     public static final String hasService = "hasService";
@@ -67,8 +68,18 @@ public class OrionConfig implements Serializable {
     public void setServicePath(String servicePath) {
         this.servicePath = servicePath;
     }
+    
+    
 
-    @JsonIgnore
+    public String getOrionUrl() {
+		return orionUrl;
+	}
+
+	public void setOrionUrl(String orionUrl) {
+		this.orionUrl = orionUrl;
+	}
+
+	@JsonIgnore
     public boolean isEmpty() {
         if (StringUtils.isBlank(getId()) || StringUtils.isBlank(getUrl()))
             return true;
