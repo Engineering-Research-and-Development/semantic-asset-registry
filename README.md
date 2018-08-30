@@ -116,10 +116,17 @@ in **Home** page, in **Applications** section, **Register** a new application wi
 
 ```bash
 <authentication.service>oAuth</authentication.service>
+<!--
+  horizon.url and client.id are child elements
+  belonging to the profile element with the id of 'prod'
+  <profile>
+    <id>prod</id>
+  ...
+-->
 <horizon.url>http://localhost:8000</horizon.url>
 <client.id>your Client ID</client.id>
 ```
-**2**. From the same folder launch the command `mvn package`
+**2**. From the same folder launch the command `mvn package -P prod`
 
 **3**. In **cam-service** folder edit the following properties in [pom.xml](https://github.com/is3labengrd/semantic-asset-registry/blob/master/cam-service/pom.xml):
  
