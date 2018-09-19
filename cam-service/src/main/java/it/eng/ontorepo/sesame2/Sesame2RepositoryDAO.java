@@ -193,6 +193,7 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
             + " FILTER(!(?type= owl:FunctionalProperty)" 
             + ")}" 
             + "ORDER BY ?name";
+        
     /* end modify */
 
     /* giaisg modify 20180309

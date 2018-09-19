@@ -37,7 +37,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.StandardCopyOption;
@@ -50,10 +49,6 @@ import java.util.stream.Collectors;
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonValue;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -72,7 +67,6 @@ import javax.ws.rs.core.SecurityContext;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -234,6 +228,7 @@ public class CAMRest {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Asset> getAssetByName(@PathParam("assetName") String assetName) {
         final RepositoryDAO repoInstance = SesameRepoManager.getRepoInstance(getClass());
+        
         try {
             List<Asset> assets = AssetOwnershipFilter.filterAll(CAMRestImpl.getIndividuals(repoInstance), securityContext);
             if (null == assetName || "".equals(assetName.trim())) {
@@ -259,11 +254,14 @@ public class CAMRest {
     public List<Asset> getAssetsForClass(@QueryParam("className") String className,
                                          @QueryParam("retrieveForChildren") boolean retrieveForChildren) {
         final RepositoryDAO repoInstance = SesameRepoManager.getRepoInstance(getClass());
+        
         try {
+        	 
             if (null == className || "".equals(className.trim()))
                 return getAssetByName(null);
-            if (retrieveForChildren)
+            if (retrieveForChildren)            	
                 return AssetOwnershipFilter.filterAll(CAMRestImpl.getIndividualsForChildren(repoInstance, className), securityContext);
+            
             return AssetOwnershipFilter.filterAll(CAMRestImpl.getIndividuals(repoInstance, className), securityContext);
         } catch (Exception e) {
         	e.printStackTrace();
@@ -1486,6 +1484,67 @@ public class CAMRest {
             logger.error(e);
             throw new CAMServiceWebException(e.getMessage());
         } catch (ClassNotFoundException e) {
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+        } catch (RuntimeException e) {
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+        } catch (Exception e) {
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+        }
+                	
+        finally {
+            SesameRepoManager.releaseRepoDaoConn(repoInstance);
+        }
+    }
+    
+    @POST
+    @Path("/v2/orion/assetbymodel")
+    @RolesAllowed({Role.BASIC, Role.ADMIN})
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateAssetModelByModelV2(@QueryParam("link") boolean linkToOCB, AssetByModelJSON model) {
+    	
+        RepositoryDAO repoInstance = null;
+        try {
+        	repoInstance = SesameRepoManager.getRepoInstance(getClass());
+        	CAMRestImpl.createAssetModel(repoInstance, model.getAssetName(), model.getClassName(), model.getDomainName());
+        	List<PropertyValueItem> individualAttributes = CAMRestImpl.getIndividualAttributes(repoInstance, model.getAssetName());
+            if (individualAttributes != null) {
+            	AssetJSON editasset = new AssetJSON(model.getAssetName(), model.getClassName(), model.getModelName(), model.getDomainName(), model.getOrionConfigId());
+                CAMRestImpl.editAsset(repoInstance, model.getAssetName(), editasset);
+                }
+                   
+        } catch (Exception e) {
+            logger.error(e);
+            throw new CAMServiceWebException(e.getMessage());
+        } 
+        
+        try {
+        	for( AttributeJSON attribute : model.getAttribute()) {
+        		repoInstance = SesameRepoManager.getRepoInstance(getClass());
+                
+        		CAMRestImpl.setAttribute(repoInstance, attribute.getName(), model.getAssetName(), attribute.getValue(), attribute.getType());
+        	}
+        	if (linkToOCB) {
+            	try {
+            		AssetJSON asset = new AssetJSON(model.getAssetName(), model.getClassName(), model.getModelName(), model.getDomainName(), model.getOrionConfigId());
+            		ArrayList<AssetJSON> assetJSONs = new ArrayList<AssetJSON>();
+            		assetJSONs.add(asset);
+            		CAMRestImpl.sendContexts(repoInstance, assetJSONs, true);
+            		
+                } catch (Exception e) {
+                	 logger.error(e);
+                     throw new CAMServiceWebException(e.getMessage());
+                } 
+            }
+        	
+        	return Response.ok("Asset was successfully created!").build();
+            
+           	   
+       }   
+        
+        catch (IllegalArgumentException e) {
             logger.error(e);
             throw new CAMServiceWebException(e.getMessage());
         } catch (RuntimeException e) {

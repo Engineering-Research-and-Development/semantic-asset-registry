@@ -75,7 +75,8 @@ public class IndividualtemToAssetTransformer {
         Asset asset = new Asset(individual, domain, date, lostDomain);
         asset.setDomainIri(domainIri);
         asset.setConnectedToOrion(connectedToOrion);
-        asset.getAttributes().addAll(attributes);
+        asset.getAttributes().addAll(individualAttributes);
+                
         return asset;
     }
 
