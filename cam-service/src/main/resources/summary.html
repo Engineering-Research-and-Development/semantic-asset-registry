@@ -311,6 +311,16 @@
                 <td>SPARQLInferenceQuery</td>
                 <td>ADMIN</td>
             </tr>
+            
+            <tr>
+                <td>POST</td>
+                <td>/SPARQLInferenceUpdate</td>
+                <td>JSON</td>
+                <td>String</td>
+                <td>Execute a SPARQL Update with an inference query</td>
+                <td>ADMIN</td>
+            </tr>
+            
             <tr>
                 <td>POST</td>
                 <td>/SPARQLQuery</td>
@@ -337,51 +347,60 @@
             </tr>
             
              <tr>
-                <td>POST</td>
+                <td>POST <font size="2" color="red">  (NEW)</font></td>
                 <td>/orion/assetbymodel</td>
-                <td></td>
+                <td>JSON</td>
                 <td>JSON</td>
                 <td>Create asset by model</td>
                 <td>ADMIN</td>
             </tr>
             
              <tr>
-                <td>PUT</td>
+                <td>PUT <font size="2" color="red">  (NEW)</font></td>
                 <td>/orion/assetbymodel</td>
-                <td></td>
+                <td>JSON</td>
                 <td>JSON</td>
                 <td>Update asset by model</td>
                 <td>ADMIN</td>
             </tr>
             
             <tr>
-                <td>POST</td>
+                <td>POST <font size="2" color="red">  (NEW)</font></td>
+                <td>/v2/orion/assetbymodel</td>
+                <td>JSON</td>
+                <td>JSON</td>
+                <td>Create asset by model</td>
+                <td>ADMIN</td>
+            </tr>
+            
+            <tr>
+                <td>POST  <font size="2" color="red">  (NEW)</font></td>
                 <td>/orion/class/assetbymodel</td>
-                <td></td>
+                <td>JSON</td>
                 <td>JSON</td>
                 <td>Link class instances to OCB</td>
                 <td>ADMIN</td>
             </tr>
             <tr>
-                <td>PUT</td>
+                <td>PUT <font size="2" color="red">  (NEW)</font></td>
                 <td>/assets/{assetName}/orion/refresh</td>
-                <td></td>
+                <td>JSON</td>
                 <td></td>
                 <td>Update asset from OCB manually</td>
                 <td>ADMIN</td>
             </tr>
             <tr>
-                <td>POST</td>
+                <td>POST <font size="2" color="red">  (NEW)</font></td>
                 <td>/orion/class/subscription</td>
-                <td></td>
                 <td>JSON</td>
-                <td>Subscribe all class instaces to OCB</td>
+                <td>JSON</td>
+                <td>Subscribe all class instances to OCB</td>
                 <td>ADMIN</td>
             </tr>
             <tr>
-                <td>POST</td>
+                <td>POST <font size="2" color="red">  (NEW)</font> </td>
                 <td>/orion/notification</td>
-                <td></td>
+                <td>JSON</td>
                 <td>JSON</td>
                 <td>Update asset on OCB Notification</td>
                 <td>ADMIN</td>

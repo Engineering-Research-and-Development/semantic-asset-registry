@@ -943,7 +943,8 @@ public class Sesame2RepositoryDAO implements RepositoryDAO {
         List<BindingSet> results = executeSelect(qs);
         for (BindingSet result : results) {
             PropertyValueItem item = getPropertyValueItem(result, name);
-            if (!item.getOriginalName().equals(lastName)) {
+            if (!item.getOriginalName().equals(lastName) || item.getOriginalName().equals("isMadeOf")) {
+            	System.out.print(item);
                 items.add(item);
                 lastName = item.getOriginalName();
             }

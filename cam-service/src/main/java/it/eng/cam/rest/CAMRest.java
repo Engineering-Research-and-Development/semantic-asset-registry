@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+import javax.json.stream.JsonParser;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -1428,6 +1429,7 @@ public class CAMRest {
     @POST
     @Path("/orion/assetbymodel")
     @RolesAllowed({Role.BASIC, Role.ADMIN})
+    @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createAssetModelByModel( @QueryParam("link") boolean linkToOCB, AssetJSON model) {
         RepositoryDAO repoInstance = null;
@@ -1474,8 +1476,9 @@ public class CAMRest {
                      throw new CAMServiceWebException(e.getMessage());
                 } 
             }
+               	
         	
-        	return Response.ok("Asset was successfully created!").build();
+        	return Response.ok("{\"result\":\"Asset was successfully created!\"}").build();
             
          	   
        }   
@@ -1502,6 +1505,7 @@ public class CAMRest {
     @POST
     @Path("/v2/orion/assetbymodel")
     @RolesAllowed({Role.BASIC, Role.ADMIN})
+    @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateAssetModelByModelV2(@QueryParam("link") boolean linkToOCB, AssetByModelJSON model) {
     	
@@ -1539,7 +1543,7 @@ public class CAMRest {
                 } 
             }
         	
-        	return Response.ok("Asset was successfully created!").build();
+        	return Response.ok("{\"result\":\"Asset was successfully created!\"}").build();
             
            	   
        }   
@@ -1567,6 +1571,7 @@ public class CAMRest {
     @PUT
     @Path("/orion/assetbymodel")
     @RolesAllowed({Role.BASIC, Role.ADMIN})
+    @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateAssetModelByModel(AssetByModelJSON model) {
     	
@@ -1604,7 +1609,7 @@ public class CAMRest {
                 } 
             }
         	
-        	return Response.ok("Asset was successfully created!").build();
+        	return Response.ok("{\"result\":\"Asset was successfully updated!\"}").build();
             
            	   
        }   
@@ -1731,9 +1736,9 @@ public class CAMRest {
             if (!isOCBEnabled(assetName))
                 return Response.status(405).entity("Individual " + assetName + " is not linked to Orion").build();
             CAMRestImpl.refreshAssetFromOCB(repoInstance, assetName);
-        	
+            
             return Response.ok(
-                    "Data refreshing from OCB for Individual was successful!")
+            		"{\"result\":\"Data refreshing from OCB for Individual was successful!\"}")
                     .build();
         } catch (Exception e) {
             logger.error(e);
