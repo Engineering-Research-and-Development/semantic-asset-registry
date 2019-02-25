@@ -5,6 +5,7 @@ import it.eng.orion.cb.ngsi.bean.EquipmentID;
 import it.eng.orion.cb.ngsi.bean.EventType;
 import it.eng.orion.cb.ngsi.bean.Location;
 import it.eng.orion.cb.ngsi.bean.NotificationEvent;
+import it.eng.orion.cb.ngsi.bean.NotificationEventBundle;
 import it.eng.orion.cb.ngsi.bean.Payload;
 import it.eng.orion.cb.ngsi.bean.PersonID;
 import it.eng.orion.cb.ngsi.bean.Timestamp;
@@ -119,49 +120,49 @@ public class NGSIAdapter {
 		ObjectNode jsonAttributes = (ObjectNode)actualObj.get("attributes");
 		
 		// EventType
-		ObjectNode objEventType = (ObjectNode)jsonAttributes.get("EventType");
+		ObjectNode objEventType = (ObjectNode)jsonAttributes.get("eventtype");
 		EventType eventType = new EventType();
 		eventType.setType(objEventType.get("type").textValue());
 		eventType.setValue(objEventType.get("value").textValue());
 		notificationEvent.setEventType(eventType);
 		
 		// PersonID
-		ObjectNode objPersonID = (ObjectNode)jsonAttributes.get("PersonID");
+		ObjectNode objPersonID = (ObjectNode)jsonAttributes.get("personid");
 		PersonID personID = new PersonID();
 		personID.setType(objPersonID.get("type").textValue());
 		personID.setValue(objPersonID.get("value").textValue());
 		notificationEvent.setPersonID(personID);
 		
 		// EquipmentID
-		ObjectNode objEquipmentID = (ObjectNode)jsonAttributes.get("EquipmentID");
+		ObjectNode objEquipmentID = (ObjectNode)jsonAttributes.get("equipmentid");
 		EquipmentID equipmentID = new EquipmentID();
 		equipmentID.setType(objEquipmentID.get("type").textValue());
 		equipmentID.setValue(objEquipmentID.get("value").textValue());
 		notificationEvent.setEquipmentID(equipmentID);
 		
 		// EquipmentDes
-		ObjectNode objEquipmentDes = (ObjectNode)jsonAttributes.get("EquipmentDes");
+		ObjectNode objEquipmentDes = (ObjectNode)jsonAttributes.get("equipmentdes");
 		EquipmentDes equipmentDes = new EquipmentDes();
 		equipmentDes.setType(objEquipmentDes.get("type").textValue());
 		equipmentDes.setValue(objEquipmentDes.get("value").textValue());
 		notificationEvent.setEquipmentDes(equipmentDes);
 		
 		// Verbosity
-		ObjectNode objVerbosity = (ObjectNode)jsonAttributes.get("Verbosity");
+		/*ObjectNode objVerbosity = (ObjectNode)jsonAttributes.get("verbosity");
 		Verbosity verbosity = new Verbosity();
 		verbosity.setType(objVerbosity.get("type").textValue());
 		verbosity.setValue(Integer.parseInt(objVerbosity.get("value").textValue()));
-		notificationEvent.setVerbosity(verbosity);
+		notificationEvent.setVerbosity(verbosity);*/
 		
 		// Payload
-		ObjectNode objPayload = (ObjectNode)jsonAttributes.get("Payload");
+		/*ObjectNode objPayload = (ObjectNode)jsonAttributes.get("Payload");
 		Payload payload = new Payload();
 		payload.setType(objPayload.get("type").textValue());
 		payload.setValue(objPayload.get("value").textValue());
-		notificationEvent.setPayload(payload);
+		notificationEvent.setPayload(payload);*/
 		
 		// Location
-		ObjectNode objLocation = (ObjectNode)jsonAttributes.get("Location");
+		ObjectNode objLocation = (ObjectNode)jsonAttributes.get("location");
 		Location location = new Location();
 		location.setType(objLocation.get("type").textValue());
 		location.setValue(objLocation.get("value").textValue());
@@ -176,9 +177,13 @@ public class NGSIAdapter {
 		timestamp.setValue(strDate);
 		notificationEvent.setTimestamp(timestamp);
 		
-		mapperCreateEntity.writeValue(System.out, notificationEvent);
+		NotificationEventBundle notificationEventBundle = new NotificationEventBundle();
+		notificationEventBundle.setActionType("APPEND");
+		notificationEventBundle.addNotificationEvent(notificationEvent);
 		
-		String jsonContextUpdate = mapper.writeValueAsString(notificationEvent);
+		mapperCreateEntity.writeValue(System.out, notificationEventBundle);
+		
+		String jsonContextUpdate = mapper.writeValueAsString(notificationEventBundle);
 		
 		String jsonResult = jsonContextUpdate.toString(); 
 		
