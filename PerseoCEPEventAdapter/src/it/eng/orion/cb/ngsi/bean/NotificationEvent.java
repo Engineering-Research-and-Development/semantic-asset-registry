@@ -10,28 +10,28 @@ public class NotificationEvent {
 	
 	private String type;
 	
-	@JsonProperty("EventType")
+	@JsonProperty("eventtype")
 	private EventType eventType;
 	
-	@JsonProperty("PersonID")
+	@JsonProperty("personid")
 	private PersonID personID;
 	
-	@JsonProperty("EquipmentID")
+	@JsonProperty("equipmentid")
 	private EquipmentID equipmentID;
 	
-	@JsonProperty("EquipmentDes")
+	@JsonProperty("equipmentdes")
 	private EquipmentDes equipmentDes;
 	
-	@JsonProperty("Verbosity")
+	@JsonProperty("verbosity")
 	private Verbosity verbosity;
 	
-	@JsonProperty("Timestamp")
+	@JsonProperty("timestamp")
 	private Timestamp timestamp;
 	
-	@JsonProperty("Payload")
+	@JsonProperty("payload")
 	private Payload payload;
 	
-	@JsonProperty("Location")
+	@JsonProperty("location")
 	private Location location;
 
 	public String getId() {
