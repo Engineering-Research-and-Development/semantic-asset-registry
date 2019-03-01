@@ -1,10 +1,5 @@
 package it.eng.rest;
 
-import it.eng.orion.cb.ngsi.NGSIAdapter;
-import it.eng.util.Util;
-
-import java.util.List;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -16,10 +11,12 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import it.eng.orion.cb.ngsi.NGSIAdapter;
+import it.eng.orion.cb.ngsi.bean.OperatorInfo;
 
 public class OrionCreateEntity {
 
@@ -58,34 +55,17 @@ public class OrionCreateEntity {
 
 		String TARGET_URL = actualObj.get("camPath").textValue() + "/SPARQLQuery";
 
+		String instanceType = actualObj.get("type").textValue();
+
 		ObjectNode jsonAttributes = (ObjectNode) actualObj.get("attributes");
 
-		log.info("TARGET_URL from JSON --> " + TARGET_URL);
+		OperatorInfo operator = SparqlService.getOperatorById(jsonAttributes.get("personid").get("value").asText(),
+				TARGET_URL);
 
-		Client client = ClientBuilder.newClient();
-		WebTarget webTarget = client.target(TARGET_URL);
-
-		log.info("URI for create CAM sparql query: " + webTarget.getUri());
-
-		Invocation.Builder invocationBuilder = webTarget.request();
-
-		String query = Util.getSparqlQuery().getProperty("login").replace("OPERATOR_ID",
-				jsonAttributes.get("personid").get("value").asText());
-
-		Response response = invocationBuilder.post(Entity.entity(query, "text/plain"));
-
-		log.info("HTTP Response STATUS: " + response.getStatus());
-
-		if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
-			log.warn("Error SPARQL query: " + response.getStatus());
-		} else {
-			log.info(" SPARQL query executed: " + response.getStatus());
+		// create HMDNotificiationEvent/NotificiationEvent
+		if (operator.getOperatorInstanceName() != null) {
+			createNotification(headers, json, operator.getOperatorName(), instanceType);
 		}
-
-		JsonNode responseBody = mapper.readTree(response.readEntity(String.class)).get("results").get("bindings");
-		String operatorName = responseBody.get(0).get("personName").get("value").asText();
-
-		createNotification(headers, json, operatorName, actualObj.get("type").textValue());
 
 		log.info("Method loginy end ...");
 
@@ -128,7 +108,6 @@ public class OrionCreateEntity {
 		invocationBuilder.header(FIWARE_SERVICE, fiwareServiceValue);
 		invocationBuilder.header(FIWARE_SERVICE_PATH, fiwareServicePathValue);
 
-		
 		String orionNGSINEventJSON = "";
 		if (notificationType.equalsIgnoreCase("NotificatioNEvent")) {
 			orionNGSINEventJSON = NGSIAdapter.getInstance().createNotificationEvent(json);

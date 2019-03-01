@@ -1,17 +1,11 @@
 package it.eng.perseo.cep.event.adapter;
 
-import it.eng.rest.CamSparqlRequest;
-import it.eng.rest.OrionCreateEntity;
-import it.eng.rest.OrionUpdateContext;
-import it.eng.rest.exception.EventAdapterException;
-
 import java.io.IOException;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -24,6 +18,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import it.eng.rest.CamSparqlRequest;
+import it.eng.rest.OrionCreateEntity;
+import it.eng.rest.OrionUpdateContext;
+import it.eng.rest.exception.EventAdapterException;
 
 @Path("/")
 public class PerseoCEPEventAdapter {

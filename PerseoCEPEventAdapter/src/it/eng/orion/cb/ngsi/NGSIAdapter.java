@@ -1,5 +1,16 @@
 package it.eng.orion.cb.ngsi;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import it.eng.orion.cb.ngsi.bean.EquipmentDes;
 import it.eng.orion.cb.ngsi.bean.EquipmentID;
 import it.eng.orion.cb.ngsi.bean.EventType;
@@ -15,20 +26,7 @@ import it.eng.orion.cb.ngsi.bean.PersonID;
 import it.eng.orion.cb.ngsi.bean.Timeout;
 import it.eng.orion.cb.ngsi.bean.Timestamp;
 import it.eng.orion.cb.ngsi.bean.UdapteContext;
-import it.eng.orion.cb.ngsi.bean.Verbosity;
 import it.eng.util.Util;
-
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class NGSIAdapter {
 

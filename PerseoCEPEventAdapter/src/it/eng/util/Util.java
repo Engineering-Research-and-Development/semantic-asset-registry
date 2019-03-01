@@ -7,7 +7,13 @@ import java.security.SecureRandom;
 import java.util.Properties;
 import java.util.UUID;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class Util {
+
+	/** local logger for this class **/
+	private static Log log = LogFactory.getLog(it.eng.util.Util.class);
 
 	public static String generateRandomHexToken(int byteLength) {
 		SecureRandom secureRandom = new SecureRandom();
@@ -15,20 +21,23 @@ public class Util {
 		secureRandom.nextBytes(token);
 		return new BigInteger(1, token).toString(16); // hex encoding
 	}
-	
-	public static String getUUID () {
+
+	public static String getUUID() {
 		UUID uuid = UUID.randomUUID();
 		long l = ByteBuffer.wrap(uuid.toString().getBytes()).getLong();
 		return Long.toString(l, Character.MAX_RADIX);
 	}
-	
-	public static String getUUIDAsNumber () {
-		return String.format("%040d", new BigInteger(UUID.randomUUID().toString().replace("-", ""), 16)).substring(0, 5);
+
+	public static String getUUIDAsNumber() {
+		return String.format("%040d", new BigInteger(UUID.randomUUID().toString().replace("-", ""), 16)).substring(0,
+				5);
 	}
-	
-	public static Properties getSparqlQuery () throws IOException {
+
+	public static Properties getSparqlQuery() throws IOException {
 		Properties prop = new Properties();
 		prop.load(it.eng.util.Util.class.getClassLoader().getResourceAsStream("querysparql.properties"));
 		return prop;
 	}
+
+	
 }

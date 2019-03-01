@@ -8,13 +8,13 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 
-import it.eng.orion.cb.ngsi.NGSIAdapter;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import it.eng.orion.cb.ngsi.NGSIAdapter;
 
 public class OrionUpdateContext {
 
