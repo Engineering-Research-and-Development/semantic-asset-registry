@@ -11,6 +11,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -55,10 +56,10 @@ public class PerseoCEPEventAdapter {
 	}
 
 	@POST
-	@Path("/NewNotificationEvent")
+	@Path("/Login")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response newNotificationEvent(@Context HttpHeaders headers, String json) {
+	public Response login(@Context HttpHeaders headers, String json) {
 		// check if all form parameters are provided
 		log.info("JSON: " + json);
 
@@ -66,7 +67,7 @@ public class PerseoCEPEventAdapter {
 			log.info("HEADERS: " + header);
 
 		try {
-			OrionCreateEntity.getInstance().createNotificationEvent(headers, json);
+			OrionCreateEntity.getInstance().login(headers, json);
 		} catch (RuntimeException e) {
 			log.error("Unable to create NGSI Entity[NotificationEvent]. Problem with Orion", e);
 			throw new EventAdapterException(e.getMessage());

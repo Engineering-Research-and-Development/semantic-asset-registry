@@ -1,8 +1,10 @@
 package it.eng.util;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
+import java.util.Properties;
 import java.util.UUID;
 
 public class Util {
@@ -18,5 +20,15 @@ public class Util {
 		UUID uuid = UUID.randomUUID();
 		long l = ByteBuffer.wrap(uuid.toString().getBytes()).getLong();
 		return Long.toString(l, Character.MAX_RADIX);
+	}
+	
+	public static String getUUIDAsNumber () {
+		return String.format("%040d", new BigInteger(UUID.randomUUID().toString().replace("-", ""), 16)).substring(0, 5);
+	}
+	
+	public static Properties getSparqlQuery () throws IOException {
+		Properties prop = new Properties();
+		prop.load(it.eng.util.Util.class.getClassLoader().getResourceAsStream("querysparql.properties"));
+		return prop;
 	}
 }

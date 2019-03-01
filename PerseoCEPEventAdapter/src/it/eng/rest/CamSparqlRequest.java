@@ -109,8 +109,7 @@ public class CamSparqlRequest {
 	}
 
 	private static String buildAnnotationForJobOrder(String personid, String annotationdes) {
-		String feedTestId = "FEED_" + String
-				.format("%040d", new BigInteger(UUID.randomUUID().toString().replace("-", ""), 16)).substring(0, 5);
+		String feedTestId = "FEED_" + Util.getUUIDAsNumber();
 		return "prefix var: <http://a4blue/ontologies/var.owl#>\r\n"
 				+ "prefix owl:  <http://www.w3.org/2002/07/owl#>\r\n"
 				+ "prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\r\n" + "INSERT DATA { var:" + feedTestId
@@ -123,8 +122,7 @@ public class CamSparqlRequest {
 	}
 
 	private static String buildAnnotationForOperation(String processsegmentid, String annotationdes) {
-		String feedTestId = "FEED_" + String
-				.format("%040d", new BigInteger(UUID.randomUUID().toString().replace("-", ""), 16)).substring(0, 5);
+		String feedTestId = "FEED_" + Util.getUUIDAsNumber();
 
 		return "prefix var: <http://a4blue/ontologies/var.owl#>\r\n"
 				+ "prefix owl:  <http://www.w3.org/2002/07/owl#>\r\n"
