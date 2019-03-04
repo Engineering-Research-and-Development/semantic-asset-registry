@@ -41,7 +41,7 @@ public class SparqlService {
 
 		log.info("HTTP Response STATUS: " + response.getStatus());
 
-		if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
+		if (response.getStatus() != Response.Status.OK.getStatusCode()) {
 			log.warn("Error SPARQL query: " + response.getStatus());
 		} else {
 			log.info(" SPARQL query executed: " + response.getStatus());
@@ -101,7 +101,7 @@ public class SparqlService {
 
 		log.info("HTTP Response STATUS: " + response.getStatus());
 
-		if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
+		if (response.getStatus() != Response.Status.OK.getStatusCode()) {
 			log.warn("Error SPARQL query: " + response.getStatus());
 		} else {
 			log.info(" SPARQL query executed: " + response.getStatus());
@@ -134,13 +134,45 @@ public class SparqlService {
 
 		log.info("HTTP Response STATUS: " + response.getStatus());
 
-		if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
+		if (response.getStatus() != Response.Status.OK.getStatusCode()) {
 			log.warn("Error SPARQL query: " + response.getStatus());
 		} else {
 			log.info(" SPARQL query executed: " + response.getStatus());
 		}
 
 		log.info("Method createOperationAnnotationOnCAM to create a FeedBack for an Operation end ...");
+		return response;
+
+	}
+	
+	public static Response deleteAnnotationOnCAM(String operatorIstanceName, String annotationIstanceName,
+			String camPath) throws IOException {
+
+		log.info("Method deleteAnnotationOnCAM to delete an Annotation(FeedBack) init ...");
+		log.info("TARGET_URL from JSON --> " + camPath);
+
+		Client client = ClientBuilder.newClient();
+		WebTarget webTarget = client.target(camPath);
+
+		log.info("URI for CAM sparql update query: " + webTarget.getUri());
+
+		Invocation.Builder invocationBuilder = webTarget.request();
+
+		String query = Util.getSparqlQuery().getProperty("deletefeedback")
+				.replace("OPERATOR_INSTANCE_NAME", operatorIstanceName)
+				.replace("ANNOTATION_INSTANCE_NAME", annotationIstanceName);
+
+		Response response = invocationBuilder.post(Entity.entity(query, "text/plain"));
+
+		log.info("HTTP Response STATUS: " + response.getStatus());
+
+		if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+			log.warn("Error SPARQL query: " + response.getStatus());
+		} else {
+			log.info(" SPARQL query executed: " + response.getStatus());
+		}
+
+		log.info("Method deleteAnnotationOnCAM to delete an Annotation(FeedBack) end ...");
 		return response;
 
 	}

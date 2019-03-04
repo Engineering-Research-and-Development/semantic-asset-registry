@@ -1,5 +1,9 @@
 package it.eng.rest;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -16,7 +20,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import it.eng.orion.cb.ngsi.NGSIAdapter;
+import it.eng.orion.cb.ngsi.bean.HMDNotificationEvent;
+import it.eng.orion.cb.ngsi.bean.NotificationEvent;
 import it.eng.orion.cb.ngsi.bean.OperatorInfo;
+import it.eng.orion.cb.ngsi.bean.OrionEntityBundle;
+import it.eng.util.Util;
 
 public class OrionCreateEntity {
 
@@ -59,40 +67,45 @@ public class OrionCreateEntity {
 
 		ObjectNode jsonAttributes = (ObjectNode) actualObj.get("attributes");
 
+		// retrieve information about operator
 		OperatorInfo operator = SparqlService.getOperatorById(jsonAttributes.get("personid").get("value").asText(),
 				TARGET_URL);
 
 		// create HMDNotificiationEvent/NotificiationEvent
 		if (operator.getOperatorInstanceName() != null) {
-			createNotification(headers, json, operator.getOperatorName(), instanceType);
+			String orionPath = actualObj.get("orionPath").textValue();
+			if (instanceType.equalsIgnoreCase("HMDNotificationEvent")) {
+				HMDNotificationEvent hmdNotificationEvent = NGSIAdapter.getInstance().createHMDNotificationEvent(json,
+						operator.getOperatorName(), "Welcome");
+				createEntityOnOrion(orionPath, headers, hmdNotificationEvent);
+			}
+			if (instanceType.equalsIgnoreCase("NotificationEvent")) {
+				NotificationEvent notificationEvent = NGSIAdapter.getInstance().createNotificationEvent(json);		
+				createEntityOnOrion(orionPath, headers, notificationEvent);
+			}
+
 		}
 
-		log.info("Method loginy end ...");
+		log.info("Method login end ...");
 
 	}
-
+	
 	/**
-	 * Create an NGSI NotificationEvent
+	 * Create or update an entity on ORION
 	 * 
 	 * @return
 	 */
-	public void createNotification(HttpHeaders headers, String json, String operatorName, String notificationType)
-			throws Exception {
-		log.info("Method createNotificationEvent init ...");
+	public <T> Response createEntityOnOrion(String orionPath, HttpHeaders headers, T orionEntity) throws IOException {
 
-		ObjectMapper mapper = new ObjectMapper();
-		JsonNode actualObj = mapper.readTree(json);
+		log.info("Method createEntityOnOrion init ...");
 
-		String TARGET_URL = actualObj.get("orionPath").textValue();
-
-		log.info("TARGET_URL from JSON --> " + TARGET_URL);
 		log.info("Header Fiware-ServicePath --> " + headers.getHeaderString(FIWARE_SERVICE_PATH));
 		log.info("Header  Fiware-Service --> " + headers.getHeaderString(FIWARE_SERVICE));
 
 		Client client = ClientBuilder.newClient();
-		WebTarget webTarget = client.target(TARGET_URL);
+		WebTarget webTarget = client.target(orionPath);
 
-		log.info("URI for create new NotificationEvent: " + webTarget.getUri());
+		log.info("URI to create entity on Orion: " + webTarget.getUri());
 
 		Invocation.Builder invocationBuilder = webTarget.request(CONTENT_TYPE_APPLICATION_JSON);
 		invocationBuilder.header("Accept", ACCEPT_CONTENT);
@@ -108,26 +121,40 @@ public class OrionCreateEntity {
 		invocationBuilder.header(FIWARE_SERVICE, fiwareServiceValue);
 		invocationBuilder.header(FIWARE_SERVICE_PATH, fiwareServicePathValue);
 
-		String orionNGSINEventJSON = "";
-		if (notificationType.equalsIgnoreCase("NotificatioNEvent")) {
-			orionNGSINEventJSON = NGSIAdapter.getInstance().createNotificationEvent(json);
+		OrionEntityBundle<T> orionEntityBundle = new OrionEntityBundle<T>();
+
+		try {
+			Method methodsetId = orionEntity.getClass().getMethod("setId", String.class);
+			methodsetId.invoke(orionEntity, orionEntity.getClass().getSimpleName() + "-" + Util.getUUID());
+			Method methodsetType = orionEntity.getClass().getMethod("setType", String.class);
+			methodsetType.invoke(orionEntity, orionEntity.getClass().getSimpleName());
+		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException e) {
+			e.printStackTrace();
 		}
 
-		if (notificationType.equalsIgnoreCase("HMDNotificatioNEvent")) {
-			orionNGSINEventJSON = NGSIAdapter.getInstance().createHMDNotificationEvent(json, operatorName);
-		}
+		orionEntityBundle.setActionType("APPEND");
+		orionEntityBundle.addEntity(orionEntity);
 
-		Response response = invocationBuilder.post(Entity.entity(orionNGSINEventJSON, CONTENT_TYPE_APPLICATION_JSON));
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.writeValue(System.out, orionEntityBundle);
+
+		String bodyJson = mapper.writeValueAsString(orionEntityBundle).toString();
+
+		log.info("JSON NGSI format for " + "create Entity on Orion --> " + bodyJson);
+
+		Response response = invocationBuilder.post(Entity.entity(bodyJson, CONTENT_TYPE_APPLICATION_JSON));
 
 		log.info("HTTP Response STATUS: " + response.getStatus());
 		if (null == response || response.getStatus() != Response.Status.CREATED.getStatusCode()) {
 			log.warn("Error create Entity: " + response.getStatus());
-
 		} else {
 			log.info("Create NGSI NotificationEvent OK: " + response.getStatus());
 		}
 
-		log.info("Method createNotificationEvent end ...");
+		log.info("Method createEntityOnOrion end ...");
+
+		return response;
 
 	}
 }

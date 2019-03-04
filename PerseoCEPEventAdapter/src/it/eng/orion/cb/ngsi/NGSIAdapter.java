@@ -15,12 +15,10 @@ import it.eng.orion.cb.ngsi.bean.EquipmentDes;
 import it.eng.orion.cb.ngsi.bean.EquipmentID;
 import it.eng.orion.cb.ngsi.bean.EventType;
 import it.eng.orion.cb.ngsi.bean.HMDNotificationEvent;
-import it.eng.orion.cb.ngsi.bean.HMDNotificationEventBundle;
 import it.eng.orion.cb.ngsi.bean.InteractionDeviceId;
 import it.eng.orion.cb.ngsi.bean.Location;
 import it.eng.orion.cb.ngsi.bean.NotificationDes;
 import it.eng.orion.cb.ngsi.bean.NotificationEvent;
-import it.eng.orion.cb.ngsi.bean.NotificationEventBundle;
 import it.eng.orion.cb.ngsi.bean.Payload;
 import it.eng.orion.cb.ngsi.bean.PersonID;
 import it.eng.orion.cb.ngsi.bean.Timeout;
@@ -109,8 +107,8 @@ public class NGSIAdapter {
 	 * 
 	 * @return JSON NGSI format for NotificationEvent
 	 */
-	public String createNotificationEvent(String json) throws Exception {
-		log.info("Method createNewNGSINotificationEvent init ...");
+	public NotificationEvent createNotificationEvent(String json) throws Exception {
+		log.info("Method createNotificationEvent init ...");
 
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode actualObj = mapper.readTree(json);
@@ -175,28 +173,11 @@ public class NGSIAdapter {
 		location.setValue(objLocation.get("value").textValue());
 		notificationEvent.setLocation(location);
 
-		Timestamp timestamp = new Timestamp();
-		timestamp.setType("String");
+		notificationEvent.setTimestamp(Util.getTimeStamp());
 
-		SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");// dd/MM/yyyy
-		Date now = new Date();
-		String strDate = sdfDate.format(now);
-		timestamp.setValue(strDate);
-		notificationEvent.setTimestamp(timestamp);
+		log.info("Method createNotificationEvent init ...");
 
-		NotificationEventBundle notificationEventBundle = new NotificationEventBundle();
-		notificationEventBundle.setActionType("APPEND");
-		notificationEventBundle.addNotificationEvent(notificationEvent);
-
-		mapperCreateEntity.writeValue(System.out, notificationEventBundle);
-
-		String jsonContextUpdate = mapper.writeValueAsString(notificationEventBundle);
-
-		String jsonResult = jsonContextUpdate.toString();
-
-		log.info("JSON NotitifcationEvent NGSI format for " + "create Entity on Orion --> " + jsonResult);
-
-		return jsonResult;
+		return notificationEvent;
 	}
 
 	/**
@@ -204,7 +185,8 @@ public class NGSIAdapter {
 	 * 
 	 * @return JSON NGSI format for NotificationEvent
 	 */
-	public String createHMDNotificationEvent(String json, String operatorName) throws Exception {
+	public HMDNotificationEvent createHMDNotificationEvent(String json, String operatorName, String message)
+			throws Exception {
 		log.info("Method createNewNGSIHMDNotificationEvent init ...");
 
 		ObjectMapper mapper = new ObjectMapper();
@@ -227,39 +209,31 @@ public class NGSIAdapter {
 
 		// notificationdes
 		NotificationDes notificationdes = new NotificationDes();
-		notificationdes.setType("String");
-		notificationdes.setValue("Welcome " + operatorName);
-		hmdnotificationEvent.setNotificationdes(notificationdes);
+		if (message.startsWith("Welcome")) {
+			notificationdes.setType("String");
+			notificationdes.setValue(message + " " + operatorName);
+			hmdnotificationEvent.setNotificationdes(notificationdes);
+		} else {
+			if (jsonAttributes.has("notificationdes")) {
+				ObjectNode objNotificationDes = (ObjectNode) jsonAttributes.get("notificationdes");
+				notificationdes.setType(objInteractionDeviceId.get("type").textValue());
+				notificationdes.setType(message + " " + objInteractionDeviceId.get("value").textValue());
+				hmdnotificationEvent.setNotificationdes(notificationdes);
+			}
+		}
 
 		// Timeout
-		//ObjectNode objTimeout = (ObjectNode) jsonAttributes.get("timeout");
+		// ObjectNode objTimeout = (ObjectNode) jsonAttributes.get("timeout");
 		Timeout timeout = new Timeout();
 		timeout.setType("int");
 		timeout.setValue("1");
 		hmdnotificationEvent.setTimeout(timeout);
 
-		Timestamp timestamp = new Timestamp();
-		timestamp.setType("String");
+		hmdnotificationEvent.setTimestamp(Util.getTimeStamp());
 
-		SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");// dd/MM/yyyy
-		Date now = new Date();
-		String strDate = sdfDate.format(now);
-		timestamp.setValue(strDate);
-		hmdnotificationEvent.setTimestamp(timestamp);
+		log.info("Method createNewNGSIHMDNotificationEvent end ...");
 
-		HMDNotificationEventBundle hmdnotificationEventBundle = new HMDNotificationEventBundle();
-		hmdnotificationEventBundle.setActionType("APPEND");
-		hmdnotificationEventBundle.addHMDNotificationEvent(hmdnotificationEvent);
-
-		mapperCreateEntity.writeValue(System.out, hmdnotificationEventBundle);
-
-		String jsonContextUpdate = mapper.writeValueAsString(hmdnotificationEventBundle);
-
-		String jsonResult = jsonContextUpdate.toString();
-
-		log.info("JSON HMDNotitifcationEvent NGSI format for " + "create Entity on Orion --> " + jsonResult);
-
-		return jsonResult;
+		return hmdnotificationEvent;
 	}
 
 }

@@ -4,11 +4,15 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import it.eng.orion.cb.ngsi.bean.Timestamp;
 
 public class Util {
 
@@ -39,5 +43,14 @@ public class Util {
 		return prop;
 	}
 
-	
+	public static Timestamp getTimeStamp() {
+		Timestamp timestamp = new Timestamp();
+		timestamp.setType("String");
+		SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");// dd/MM/yyyy
+		Date now = new Date();
+		String strDate = sdfDate.format(now);
+		timestamp.setValue(strDate);
+		return timestamp;
+	}
+
 }

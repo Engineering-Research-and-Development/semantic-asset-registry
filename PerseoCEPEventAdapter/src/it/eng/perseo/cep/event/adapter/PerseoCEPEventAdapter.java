@@ -96,31 +96,25 @@ public class PerseoCEPEventAdapter {
 
 		if (jsonAttributes.get("eventtype").get("value").textValue().equalsIgnoreCase("JOBORDER")) {
 			try {
-				CamSparqlRequest.getInstance().createAnnotationForJobOrder(headers, actualObj);
-			} catch (RuntimeException e) {
-				log.error("Unable to execute SPARQL query to create an Annotation for a joborder", e);
-				throw new EventAdapterException(e.getMessage());
+				CamSparqlRequest.getInstance().createAnnotationForJobOrder(headers, json);
 			} catch (Exception e) {
-				log.error("Unable to execute SPARQL query to create an Annotation for a joborder", e);
+				log.error("Unable to create an Annotation for the joborder", e);
 				throw new EventAdapterException(e.getMessage());
 			}
 
-			return Response.ok("Entity Annotation successfull created", MediaType.APPLICATION_JSON).build();
+			return Response.ok("Annotation for the joborder successfull created", MediaType.APPLICATION_JSON).build();
 
 		}
 
 		if (jsonAttributes.get("eventtype").get("value").textValue().equalsIgnoreCase("OPERATION")) {
 			try {
-				CamSparqlRequest.getInstance().createAnnotationForOperation(headers, actualObj);
-			} catch (RuntimeException e) {
-				log.error("Unable to execute SPARQL query to create an Annotation for an operation", e);
-				throw new EventAdapterException(e.getMessage());
+				CamSparqlRequest.getInstance().createAnnotationForOperation(headers, json);
 			} catch (Exception e) {
-				log.error("Unable to execute SPARQL query to create an Annotation for an operation", e);
+				log.error("Unable to create an Annotation for the operation", e);
 				throw new EventAdapterException(e.getMessage());
 			}
 
-			return Response.ok("Entity Annotation successfull created", MediaType.APPLICATION_JSON).build();
+			return Response.ok("Annotation for the operation successfull created", MediaType.APPLICATION_JSON).build();
 
 		}
 

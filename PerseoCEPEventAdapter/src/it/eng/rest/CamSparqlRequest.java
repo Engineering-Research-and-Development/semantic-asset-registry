@@ -1,14 +1,19 @@
 package it.eng.rest;
 
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import it.eng.orion.cb.ngsi.bean.HMDNotificationEvent;
+import it.eng.orion.cb.ngsi.bean.NotificationDes;
 import it.eng.orion.cb.ngsi.bean.OperatorInfo;
+import it.eng.util.Util;
 
 public class CamSparqlRequest {
 	private static Log log = LogFactory.getLog(CamSparqlRequest.class);
@@ -29,18 +34,34 @@ public class CamSparqlRequest {
 	 * 
 	 * @return
 	 */
-	public void createAnnotationForJobOrder(HttpHeaders headers, JsonNode actualObj) throws Exception {
+	public void createAnnotationForJobOrder(HttpHeaders headers, String json) throws Exception {
 
-		String TARGET_URL = actualObj.get("camPath").textValue();
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode actualObj = mapper.readTree(json);
+
+		String TARGET_URL = actualObj.get("camPath").textValue();	
+		
 
 		ObjectNode jsonAttributes = (ObjectNode) actualObj.get("attributes");
-
+		
 		OperatorInfo operator = SparqlService.getOperatorById(jsonAttributes.get("personid").get("value").asText(),
 				TARGET_URL + "/SPARQLQuery");
 
 		if (operator.getOperatorInstanceName() != null) {
-			SparqlService.createJobOrderAnnotationOnCAM(operator.getOperatorInstanceName(),
+			Response response = SparqlService.createJobOrderAnnotationOnCAM(operator.getOperatorInstanceName(),
 					jsonAttributes.get("annotationdes").get("value").asText(), TARGET_URL + "/SPARQLUpdate");
+			if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+				String ORION_PATH = actualObj.get("orionPath").textValue();
+				HMDNotificationEvent hmdNotificationEvent = new HMDNotificationEvent();
+				hmdNotificationEvent.setTimestamp(Util.getTimeStamp());
+				NotificationDes notDes = new NotificationDes();
+				notDes.setType("String");
+				notDes.setValue("workorder: " + jsonAttributes.get("annotationdes").get("value").asText());
+				hmdNotificationEvent.setNotificationdes(notDes);
+				OrionCreateEntity.getInstance().createEntityOnOrion(ORION_PATH, headers,
+						hmdNotificationEvent);
+
+			}
 		}
 
 	}
@@ -50,7 +71,10 @@ public class CamSparqlRequest {
 	 * 
 	 * @return
 	 */
-	public void createAnnotationForOperation(HttpHeaders headers, JsonNode actualObj) throws Exception {
+	public void createAnnotationForOperation(HttpHeaders headers, String json) throws Exception {
+
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode actualObj = mapper.readTree(json);
 
 		String TARGET_URL = actualObj.get("camPath").textValue();
 
