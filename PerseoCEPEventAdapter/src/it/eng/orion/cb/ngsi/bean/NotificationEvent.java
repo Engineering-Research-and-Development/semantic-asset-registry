@@ -33,6 +33,12 @@ public class NotificationEvent {
 	
 	@JsonProperty("location")
 	private Location location;
+	
+	@JsonProperty("annotationid")
+	private AnnotationId annotationId;
+	
+	@JsonProperty("annotationdes")
+	private AnnotationDes annotationDes;
 
 	public String getId() {
 		return id;
@@ -113,5 +119,23 @@ public class NotificationEvent {
 	public void setLocation(Location location) {
 		this.location = location;
 	}
+
+	public AnnotationId getAnnotationId() {
+		return annotationId;
+	}
+
+	public void setAnnotationId(AnnotationId annotationId) {
+		this.annotationId = annotationId;
+	}
+
+	public AnnotationDes getAnnotationDes() {
+		return annotationDes;
+	}
+
+	public void setAnnotationDes(AnnotationDes annotationDes) {
+		this.annotationDes = annotationDes;
+	}
+	
+	
 	
 }

@@ -77,6 +77,34 @@ public class PerseoCEPEventAdapter {
 
 		return Response.ok("Entity NotificationEvent successfull created", MediaType.APPLICATION_JSON).build();
 	}
+	
+	@POST
+	@Path("/AddNotificationEvent")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response addNotificationEvent(@Context HttpHeaders headers, String json) {
+		// check if all form parameters are provided
+		log.info("JSON: " + json);
+
+		for (String header : headers.getRequestHeaders().keySet())
+			log.info("HEADERS: " + header);
+
+		try {
+			OrionCreateEntity.getInstance().addNotificationEvent(headers, json);
+		} catch (RuntimeException e) {
+			log.error("Unable to create NGSI Entity[NotificationEvent]. Problem with Orion", e);
+			throw new EventAdapterException(e.getMessage());
+		} catch (Exception e) {
+			log.error("Unable to create NGSI Entity[NotificationEvent]", e);
+			throw new EventAdapterException(e.getMessage());
+		}
+
+		return Response.ok("Entity NotificationEvent successfull created", MediaType.APPLICATION_JSON).build();
+	}
+	
+	
+	
+	
 
 	@POST
 	@Path("/FeedBack")
