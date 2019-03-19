@@ -30,63 +30,69 @@ public class CamSparqlRequest {
 	}
 
 	/**
-	 * Execute query SPARQL to create an Annotation for a JobOrder
+	 * Add feedback (Annotation) on CAM
 	 * 
 	 * @return
 	 */
-	public void createAnnotationForJobOrder(HttpHeaders headers, String json) throws Exception {
+	public void addFeedback(HttpHeaders headers, String json) throws Exception {
+		log.info("Method addFeedback init ...");
 
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode actualObj = mapper.readTree(json);
 
-		String TARGET_URL = actualObj.get("camPath").textValue();	
-		
+		String TARGET_URL = actualObj.get("camPath").textValue() + "/SPARQLQuery";
+		String TARGET_URL_QueryUPDATE = actualObj.get("camPath").textValue() + "/SPARQLUpdate";
+
+		// String instanceType = actualObj.get("type").textValue();
 
 		ObjectNode jsonAttributes = (ObjectNode) actualObj.get("attributes");
-		
-		OperatorInfo operator = SparqlService.getOperatorById(jsonAttributes.get("personid").get("value").asText(),
-				TARGET_URL + "/SPARQLQuery");
 
-		if (operator.getOperatorInstanceName() != null) {
-			Response response = SparqlService.createJobOrderAnnotationOnCAM(operator.getOperatorInstanceName(),
-					jsonAttributes.get("annotationdes").get("value").asText(), TARGET_URL + "/SPARQLUpdate");
-			if (response.getStatus() == Response.Status.OK.getStatusCode()) {
-				String ORION_PATH = actualObj.get("orionPath").textValue();
-				HMDNotificationEvent hmdNotificationEvent = new HMDNotificationEvent();
-				hmdNotificationEvent.setTimestamp(Util.getTimeStamp());
-				NotificationDes notDes = new NotificationDes();
-				notDes.setType("String");
-				notDes.setValue("workorder: " + jsonAttributes.get("annotationdes").get("value").asText());
-				hmdNotificationEvent.setNotificationdes(notDes);
-				OrionCreateEntity.getInstance().createEntityOnOrion(ORION_PATH, headers,
-						hmdNotificationEvent);
+		// retrieve information about operator
+		OperatorInfo operator = SparqlService
+				.getOperatorByInteractionDeviceId(jsonAttributes.get("interactiondeviceid").get("value").asText(), TARGET_URL);
 
+		if (operator != null && operator.getOperatorInstanceName() != null && operator.getJobOrder()!=null) {
+			String notificationdes = "";
+			if (jsonAttributes.has("notificationdes")) {
+				notificationdes = jsonAttributes.get("notificationdes").get("value").asText();
 			}
+			SparqlService.createJobOrderAnnotationOnCAM(operator.getOperatorInstanceName(), notificationdes, operator.getJobOrder(),
+					TARGET_URL_QueryUPDATE);
+
 		}
+
+		log.info("Method addFeedback end ...");
 
 	}
 
 	/**
-	 * Execute query SPARQL to create an Annotation for an Operation
+	 * Delete feedback (Annotation) from the CAM
 	 * 
 	 * @return
 	 */
-	public void createAnnotationForOperation(HttpHeaders headers, String json) throws Exception {
+	public void deleteFeedback(HttpHeaders headers, String json) throws Exception {
+		log.info("Method deleteFeedback init ...");
 
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode actualObj = mapper.readTree(json);
 
-		String TARGET_URL = actualObj.get("camPath").textValue();
+		String TARGET_URL = actualObj.get("camPath").textValue() + "/SPARQLQuery";
+		String TARGET_URL_QueryUPDATE = actualObj.get("camPath").textValue() + "/SPARQLUpdate";
 
 		ObjectNode jsonAttributes = (ObjectNode) actualObj.get("attributes");
 
-		OperatorInfo operator = SparqlService.getOperatorById(jsonAttributes.get("personid").get("value").asText(),
-				TARGET_URL + "/SPARQLQuery");
+		// retrieve information about a specific operator
+		OperatorInfo operator = SparqlService.getOperatorAndAnnotationByAnnotationId(
+				jsonAttributes.get("notificationid").get("value").asText(), TARGET_URL);
 
-		if (operator.getProcessSegment() != null) {
-			SparqlService.createOperationAnnotationOnCAM(operator.getProcessSegment(),
-					jsonAttributes.get("annotationdes").get("value").asText(), TARGET_URL + "/SPARQLUpdate");
+		if (operator != null && operator.getOperatorInstanceName() != null && operator.getAnnotation() != null) {
+
+			SparqlService.deleteAnnotationOnCAM(operator.getOperatorInstanceName(), operator.getAnnotation(),
+					TARGET_URL_QueryUPDATE);
+
 		}
+
+		log.info("Method deleteFeedback end ...");
 
 	}
 

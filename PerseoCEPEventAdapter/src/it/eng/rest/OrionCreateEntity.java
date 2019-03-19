@@ -19,15 +19,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import it.eng.orion.cb.ngsi.NGSIAdapter;
 import it.eng.orion.cb.ngsi.bean.Annotation;
 import it.eng.orion.cb.ngsi.bean.AnnotationDes;
 import it.eng.orion.cb.ngsi.bean.AnnotationId;
 import it.eng.orion.cb.ngsi.bean.EquipmentID;
 import it.eng.orion.cb.ngsi.bean.EventType;
-import it.eng.orion.cb.ngsi.bean.HMDNotificationEvent;
 import it.eng.orion.cb.ngsi.bean.NotificationEvent;
-import it.eng.orion.cb.ngsi.bean.OperatorInfo;
 import it.eng.orion.cb.ngsi.bean.OrionEntityBundle;
 import it.eng.util.Util;
 
@@ -56,46 +53,6 @@ public class OrionCreateEntity {
 	}
 
 	/**
-	 * Execute query SPARQL for Operator login
-	 * 
-	 * @return
-	 */
-	public void login(HttpHeaders headers, String json) throws Exception {
-		log.info("Method login init ...");
-
-		ObjectMapper mapper = new ObjectMapper();
-		JsonNode actualObj = mapper.readTree(json);
-
-		String TARGET_URL = actualObj.get("camPath").textValue() + "/SPARQLQuery";
-
-		String instanceType = actualObj.get("type").textValue();
-
-		ObjectNode jsonAttributes = (ObjectNode) actualObj.get("attributes");
-
-		// retrieve information about operator
-		OperatorInfo operator = SparqlService.getOperatorById(jsonAttributes.get("personid").get("value").asText(),
-				TARGET_URL);
-
-		// create HMDNotificiationEvent/NotificiationEvent
-		if (operator.getOperatorInstanceName() != null) {
-			String orionPath = actualObj.get("orionPath").textValue();
-			if (instanceType.equalsIgnoreCase("HMDNotificationEvent")) {
-				HMDNotificationEvent hmdNotificationEvent = NGSIAdapter.getInstance().createHMDNotificationEvent(json,
-						operator.getOperatorName(), "Welcome");
-				createEntityOnOrion(orionPath, headers, hmdNotificationEvent);
-			}
-			if (instanceType.equalsIgnoreCase("NotificationEvent")) {
-				NotificationEvent notificationEvent = NGSIAdapter.getInstance().createNotificationEvent(json);
-				createEntityOnOrion(orionPath, headers, notificationEvent);
-			}
-
-		}
-
-		log.info("Method login end ...");
-
-	}
-
-	/**
 	 * Add NotificationEvent on ORION Context Broker
 	 * 
 	 * @return
@@ -108,7 +65,7 @@ public class OrionCreateEntity {
 
 		String TARGET_URL = actualObj.get("camPath").textValue() + "/SPARQLQuery";
 
-		String instanceType = actualObj.get("type").textValue();
+		//String instanceType = actualObj.get("type").textValue();
 
 		ObjectNode jsonAttributes = (ObjectNode) actualObj.get("attributes");
 
@@ -116,7 +73,7 @@ public class OrionCreateEntity {
 
 		// retrieve Annotation by the joborderid
 		Annotation annotation = SparqlService
-				.getAnnotationByJobOrderId(jsonAttributes.get("jobordeid").get("value").asText(), TARGET_URL);
+				.getAnnotationByJobOrderId(jsonAttributes.get("joborderid").get("value").asText(), TARGET_URL);
 
 		// add NotificationEvent on Orion
 		if (annotation != null && annotation.getAnnotationInstance() != null) {
@@ -135,16 +92,16 @@ public class OrionCreateEntity {
 				equipmentId.setValue(jsonAttributes.get("equipmentid").get("value").asText());
 				notificatinEvent.setEquipmentID(equipmentId);
 			}
-			
+
 			AnnotationId annotationId = new AnnotationId();
 			annotationId.setType("String");
 			annotationId.setValue(annotation.getAnnotationId());
 			notificatinEvent.setAnnotationId(annotationId);
-			
+
 			AnnotationDes annotationDes = new AnnotationDes();
 			annotationDes.setType("String");
 			annotationDes.setValue(annotation.getAnnotationDes());
-			notificatinEvent.setAnnotationDes(annotationDes);			
+			notificatinEvent.setAnnotationDes(annotationDes);
 
 			createEntityOnOrion(orionPath, headers, notificatinEvent);
 		}
@@ -186,6 +143,7 @@ public class OrionCreateEntity {
 
 		OrionEntityBundle<T> orionEntityBundle = new OrionEntityBundle<T>();
 
+		//java reflection
 		try {
 			Method methodsetId = orionEntity.getClass().getMethod("setId", String.class);
 			methodsetId.invoke(orionEntity, orionEntity.getClass().getSimpleName() + "-" + Util.getUUID());

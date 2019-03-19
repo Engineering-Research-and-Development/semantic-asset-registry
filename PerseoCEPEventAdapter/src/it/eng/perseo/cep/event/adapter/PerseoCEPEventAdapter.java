@@ -15,13 +15,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import it.eng.rest.CamSparqlRequest;
 import it.eng.rest.OrionCreateEntity;
-import it.eng.rest.OrionUpdateContext;
 import it.eng.rest.exception.EventAdapterException;
 
 @Path("/")
@@ -30,54 +26,6 @@ public class PerseoCEPEventAdapter {
 	/** local logger for this class **/
 	private static Log log = LogFactory.getLog(PerseoCEPEventAdapter.class);
 
-	@POST
-	@Path("/NotificationEvent")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response notificationEvent(@Context HttpHeaders headers, String json) {
-		// check if all form parameters are provided
-		log.info("JSON: " + json);
-
-		for (String header : headers.getRequestHeaders().keySet())
-			log.info("HEADERS: " + header);
-
-		try {
-			OrionUpdateContext.getInstance().updateContextforNEvent(headers, json);
-		} catch (RuntimeException e) {
-			log.error("Unable to update context. Problem with Orion", e);
-			throw new EventAdapterException(e.getMessage());
-		} catch (Exception e) {
-			log.error("Unable to update context. Problem with Orion", e);
-			throw new EventAdapterException(e.getMessage());
-		}
-
-		return Response.ok("Orion UpdateContext OK", MediaType.APPLICATION_JSON).build();
-	}
-
-	@POST
-	@Path("/Login")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response login(@Context HttpHeaders headers, String json) {
-		// check if all form parameters are provided
-		log.info("JSON: " + json);
-
-		for (String header : headers.getRequestHeaders().keySet())
-			log.info("HEADERS: " + header);
-
-		try {
-			OrionCreateEntity.getInstance().login(headers, json);
-		} catch (RuntimeException e) {
-			log.error("Unable to create NGSI Entity[NotificationEvent]. Problem with Orion", e);
-			throw new EventAdapterException(e.getMessage());
-		} catch (Exception e) {
-			log.error("Unable to create NGSI Entity[NotificationEvent]", e);
-			throw new EventAdapterException(e.getMessage());
-		}
-
-		return Response.ok("Entity NotificationEvent successfull created", MediaType.APPLICATION_JSON).build();
-	}
-	
 	@POST
 	@Path("/AddNotificationEvent")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -101,52 +49,50 @@ public class PerseoCEPEventAdapter {
 
 		return Response.ok("Entity NotificationEvent successfull created", MediaType.APPLICATION_JSON).build();
 	}
-	
-	
-	
-	
 
 	@POST
-	@Path("/FeedBack")
+	@Path("/AddFeedback")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response feedBack(@Context HttpHeaders headers, String json) throws JsonProcessingException, IOException {
+	public Response addFeedback(@Context HttpHeaders headers, String json) throws JsonProcessingException, IOException {
 		// check if all form parameters are provided
 		log.info("JSON: " + json);
 
 		for (String header : headers.getRequestHeaders().keySet())
 			log.info("HEADERS: " + header);
 
-		ObjectMapper mapper = new ObjectMapper();
-		JsonNode actualObj = mapper.readTree(json);
-
-		ObjectNode jsonAttributes = (ObjectNode) actualObj.get("attributes");
-
-		if (jsonAttributes.get("eventtype").get("value").textValue().equalsIgnoreCase("JOBORDER")) {
-			try {
-				CamSparqlRequest.getInstance().createAnnotationForJobOrder(headers, json);
-			} catch (Exception e) {
-				log.error("Unable to create an Annotation for the joborder", e);
-				throw new EventAdapterException(e.getMessage());
-			}
-
-			return Response.ok("Annotation for the joborder successfull created", MediaType.APPLICATION_JSON).build();
-
+		try {
+			CamSparqlRequest.getInstance().addFeedback(headers, json);
+		} catch (Exception e) {
+			log.error("Unable to create an Annotation for the joborder", e);
+			throw new EventAdapterException(e.getMessage());
 		}
 
-		if (jsonAttributes.get("eventtype").get("value").textValue().equalsIgnoreCase("OPERATION")) {
-			try {
-				CamSparqlRequest.getInstance().createAnnotationForOperation(headers, json);
-			} catch (Exception e) {
-				log.error("Unable to create an Annotation for the operation", e);
-				throw new EventAdapterException(e.getMessage());
-			}
+		return Response.ok("Annotation for the joborder successfull created", MediaType.APPLICATION_JSON).build();
 
-			return Response.ok("Annotation for the operation successfull created", MediaType.APPLICATION_JSON).build();
+	}
 
+	@POST
+	@Path("/DeleteFeedback")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response deleteFeedback(@Context HttpHeaders headers, String json)
+			throws JsonProcessingException, IOException {
+		// check if all form parameters are provided
+		log.info("JSON: " + json);
+
+		for (String header : headers.getRequestHeaders().keySet())
+			log.info("HEADERS: " + header);
+
+		try {
+			CamSparqlRequest.getInstance().deleteFeedback(headers, json);
+		} catch (Exception e) {
+			log.error("Unable to delete an Annotation for the joborder", e);
+			throw new EventAdapterException(e.getMessage());
 		}
 
-		return null;
+		return Response.ok("Annotation for the joborder successfull deleted", MediaType.APPLICATION_JSON).build();
+
 	}
 
 }
