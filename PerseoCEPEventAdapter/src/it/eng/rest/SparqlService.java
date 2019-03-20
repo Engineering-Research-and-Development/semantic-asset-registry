@@ -37,8 +37,8 @@ public class SparqlService {
 
 		Invocation.Builder invocationBuilder = webTarget.request();
 
-		String query = Util.getSparqlQuery().getProperty("getOperatorByInteractionDeviceId").replace("#INTERACTION_DEVICE_ID",
-				interactionDeviceid);
+		String query = Util.getSparqlQuery().getProperty("getOperatorByInteractionDeviceId")
+				.replace("#INTERACTION_DEVICE_ID", interactionDeviceid);
 
 		Response response = invocationBuilder.post(Entity.entity(query, "text/plain"));
 
@@ -80,20 +80,18 @@ public class SparqlService {
 			String interactionDevice = responseBody.get(0).get("interactiondevice").get("value").asText();
 			operator.setInteractionDevice(interactionDevice.substring(interactionDevice.indexOf("#") + 1));
 		}
-		
+
 		// joborder
 		if (responseBody.get(0).has("joborder")) {
 			String jobOrder = responseBody.get(0).get("joborder").get("value").asText();
 			operator.setJobOrder(jobOrder.substring(jobOrder.indexOf("#") + 1));
 		}
-		
-		
 
 		log.info("Method getOperatorByInteractionDeviceId end ...");
 
 		return operator;
 	}
-	
+
 	public static OperatorInfo getOperatorAndAnnotationByAnnotationId(String annotationId, String camPath)
 			throws IOException {
 		log.info("Method getOperatorAndAnnotationByAnnotationId init ...");
@@ -107,8 +105,8 @@ public class SparqlService {
 
 		Invocation.Builder invocationBuilder = webTarget.request();
 
-		String query = Util.getSparqlQuery().getProperty("getOperatorAndAnnotationByAnnotationId").replace("#ANNOTATION_ID",
-				annotationId);
+		String query = Util.getSparqlQuery().getProperty("getOperatorAndAnnotationByAnnotationId")
+				.replace("#ANNOTATION_ID", annotationId);
 
 		Response response = invocationBuilder.post(Entity.entity(query, "text/plain"));
 
@@ -139,6 +137,12 @@ public class SparqlService {
 		if (responseBody.get(0).has("annotation")) {
 			String annotation = responseBody.get(0).get("annotation").get("value").asText();
 			operator.setAnnotation(annotation.substring(annotation.indexOf("#") + 1));
+		}
+
+		// joborder
+		if (responseBody.get(0).has("joborder")) {
+			String jobOrder = responseBody.get(0).get("joborder").get("value").asText();
+			operator.setJobOrder(jobOrder.substring(jobOrder.indexOf("#") + 1));
 		}
 
 		log.info("Method getOperatorAndAnnotationByAnnotationId end ...");
@@ -214,7 +218,8 @@ public class SparqlService {
 
 		String query = Util.getSparqlQuery().getProperty("joborderfeedback")
 				.replace("FEED_ID", "FEED_" + Util.getUUIDAsNumber())
-				.replace("OPERATOR_INSTANCE_NAME", operatorInstanceName).replace("ANNOTATION_TEXT", annotatationText).replace("JOBORDER_INSTANCE_NAME", jobOrder);
+				.replace("OPERATOR_INSTANCE_NAME", operatorInstanceName).replace("ANNOTATION_TEXT", annotatationText)
+				.replace("JOBORDER_INSTANCE_NAME", jobOrder);
 
 		Response response = invocationBuilder.post(Entity.entity(query, "text/plain"));
 
@@ -232,7 +237,7 @@ public class SparqlService {
 	}
 
 	public static Response deleteAnnotationOnCAM(String operatorIstanceName, String annotationIstanceName,
-			String camPath) throws IOException {
+			String jobOrderInstanceName, String camPath) throws IOException {
 
 		log.info("Method deleteAnnotationOnCAM to delete an Annotation(FeedBack) init ...");
 		log.info("TARGET_URL from JSON --> " + camPath);
@@ -246,7 +251,8 @@ public class SparqlService {
 
 		String query = Util.getSparqlQuery().getProperty("deletefeedback")
 				.replace("OPERATOR_INSTANCE_NAME", operatorIstanceName)
-				.replace("ANNOTATION_INSTANCE_NAME", annotationIstanceName);
+				.replace("ANNOTATION_INSTANCE_NAME", annotationIstanceName)
+				.replace("JOB_ORDER_INSTANCE_NAME", jobOrderInstanceName);
 
 		Response response = invocationBuilder.post(Entity.entity(query, "text/plain"));
 

@@ -85,9 +85,9 @@ public class CamSparqlRequest {
 		OperatorInfo operator = SparqlService.getOperatorAndAnnotationByAnnotationId(
 				jsonAttributes.get("notificationid").get("value").asText(), TARGET_URL);
 
-		if (operator != null && operator.getOperatorInstanceName() != null && operator.getAnnotation() != null) {
+		if (operator != null && operator.getOperatorInstanceName() != null && operator.getAnnotation() != null && operator.getJobOrder()!=null) {
 
-			SparqlService.deleteAnnotationOnCAM(operator.getOperatorInstanceName(), operator.getAnnotation(),
+			SparqlService.deleteAnnotationOnCAM(operator.getOperatorInstanceName(), operator.getAnnotation(), operator.getJobOrder(),
 					TARGET_URL_QueryUPDATE);
 
 		}
