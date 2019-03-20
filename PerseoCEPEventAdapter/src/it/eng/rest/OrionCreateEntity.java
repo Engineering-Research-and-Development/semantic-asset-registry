@@ -76,7 +76,7 @@ public class OrionCreateEntity {
 				.getAnnotationByJobOrderId(jsonAttributes.get("joborderid").get("value").asText(), TARGET_URL);
 
 		// add NotificationEvent on Orion
-		if (annotation != null && annotation.getAnnotationInstance() != null) {
+		if (annotation != null && annotation.getAnnotationId() != null) {
 			NotificationEvent notificatinEvent = new NotificationEvent();
 
 			// set eventtype
