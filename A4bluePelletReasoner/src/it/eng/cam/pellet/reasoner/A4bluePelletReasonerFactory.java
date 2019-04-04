@@ -7,11 +7,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.mindswap.pellet.jena.PelletReasonerFactory;
 
-import com.clarkparsia.pellet.sparqldl.jena.SparqlDLExecutionFactory;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.query.ResultSetFormatter;
@@ -87,7 +87,7 @@ public class A4bluePelletReasonerFactory {
 			Query q = QueryFactory.create(sparqlQuery);
 			// Create a SPARQL-DL query execution for the given query and
 			// ontology model
-			qe = SparqlDLExecutionFactory.create(q, infModel);
+			qe = QueryExecutionFactory.create(q, infModel);
 
 			// We want to execute a SELECT query, do it, and return the result
 			// set
