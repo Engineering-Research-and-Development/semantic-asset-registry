@@ -30,19 +30,22 @@ public class A4blueSPARQLUpdate {
 			return Response.status(400).entity("Invalid data input").build();
 		if (json.getSparqlQuery() == null || json.getSparqlQuery().isEmpty())
 			return Response.status(400).entity("Invalid data input").build();
-
-		boolean result = false; 
-		try {
-			String rdfDocument = A4blueJenaSPARQLUpdateFactory.getInstance().executeInferenceUpdate(
-					json.getDocumentURI(),json.getSparqlQuery());
-			result = A4blueJenaSPARQLUpdateFactory.getInstance().putRDFData(
-					json.getDocumentURI(), rdfDocument);
-			if (!result)
-				throw new CAMServiceWebException("Unable to execute SPARQL inference Update");
-		} catch (Exception e) {
-			log.error("Unable to execute SPARQL inference Update. Problem with repository",e);
-			throw new CAMServiceWebException(e.getMessage());
+		
+		A4blueJenaSPARQLUpdateFactory instance = 
+				new A4blueJenaSPARQLUpdateFactory();
+		
+		synchronized (instance) {
+			try {
+				String rdfDocument = instance.executeInferenceUpdate(
+						json.getDocumentURI(), json.getSparqlQuery());
+				if (!instance.putRDFData(json.getDocumentURI(), rdfDocument))
+					throw new CAMServiceWebException("Unable to execute SPARQL inference Update");
+			} catch (Exception e) {
+				log.error("Unable to execute SPARQL inference Update. Problem with repository", e);
+				throw new CAMServiceWebException(e.getMessage());
+			}
 		}
+		
 		return Response.ok("SPARQL Operation Performed", MediaType.APPLICATION_JSON).build();
 	}
 
