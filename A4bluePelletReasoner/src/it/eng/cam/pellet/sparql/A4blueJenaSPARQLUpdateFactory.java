@@ -32,34 +32,12 @@ public class A4blueJenaSPARQLUpdateFactory {
 	/** local logger for this class **/
 	private static Log log = LogFactory.getLog(
 			A4blueJenaSPARQLUpdateFactory.class);
-
-	/**
-	 * static reference
-	 */
-	private static A4blueJenaSPARQLUpdateFactory jenasparql = null;
 	
 	public static final String TURTLE = "TURTLE";
 
 	public static final String CONTENT_TYPE = "Content-Type";
 	
 	public static final String ACCEPT_FORMAT = "application/rdf+xml;charset=UTF-8";
-	
-	/**
-	 * @constructor for this calss
-	 */
-	private A4blueJenaSPARQLUpdateFactory (){
-	}
-	
-	/**
-	 * get static instance of this class
-	 * @return
-	 */
-	public static A4blueJenaSPARQLUpdateFactory getInstance() {
-		if (jenasparql == null) {
-			jenasparql = new A4blueJenaSPARQLUpdateFactory();
-		}
-		return jenasparql;
-	}
 	
 	/**
 	 * Execute an an SPARQL Update on Inference Model 
