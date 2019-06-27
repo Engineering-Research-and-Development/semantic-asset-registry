@@ -46,7 +46,7 @@ public class A4blueJenaSPARQLUpdateFactory {
 	 * @return New model containing the new SPARQL Statement
 	 * @throws Exception
 	 */
-	public String executeInferenceUpdate(String documentURI, String sparqlUpdate)
+	public synchronized String executeInferenceUpdate(String documentURI, String sparqlUpdate)
 			throws Exception {
 		log.info("Method executeInferenceUpdate INIT");
 		
@@ -122,12 +122,15 @@ public class A4blueJenaSPARQLUpdateFactory {
 	 * @param rdfModel RDF Model to PUT
 	 * @throws Exception
 	 */
-	public boolean putRDFData(String documentURI, String rdfModel) throws Exception {
+	public synchronized boolean putRDFData(String documentURI, String rdfModel) throws Exception {
 		log.info("Method putRDFData INIT");
 		
 		boolean result = false;
 		
 		try {
+			log.info("documentIRI --> " + documentURI);
+			// log.info("rdfModel --> " + rdfModel);
+			
 			Client client = ClientBuilder.newClient();
 
 			WebTarget webTarget = client.target(documentURI);
