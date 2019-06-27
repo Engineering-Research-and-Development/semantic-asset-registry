@@ -4,6 +4,7 @@ import it.eng.cam.finder.FinderFactory;
 
 import java.net.URL;
 import java.util.MissingResourceException;
+import java.util.concurrent.Future;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -122,21 +123,35 @@ public class PelletReasonerFactory {
 		String JsonResult = null;
 		try {
 			Client client = ClientBuilder.newClient();
-			
+/*			
 			WebTarget webTarget = client.target(getInferenceServiceURL())
 					.path("SPARQLInferenceUpdate");
 			
 			Invocation.Builder invocationBuilder = webTarget.request(
 					CONTENT_TYPE);
 			invocationBuilder.header("Accept", ACCEPT_CONTENT);
-			
+*/			
 			PelletResonerJSON inputJSON = new PelletResonerJSON();
 			inputJSON.setDocumentURI(SESAME_DOCUMENT_IRI);
 			inputJSON.setSparqlQuery(sparqlUpdate);
 			
+			Future<Response> future = client.target(getInferenceServiceURL() + "/SPARQLInferenceUpdate")
+	                    .request()
+	                    .async().post(Entity.entity(
+						inputJSON, CONTENT_TYPE));			
+/*			
 			Response response = invocationBuilder.post(Entity.entity(
 					inputJSON, CONTENT_TYPE));
+*/
+            // block until complete
+			if (future == null) {
+				logger.error("Error in inference udpate");
+				JsonResult = "Unable to execute SPARQL inference Update. Problem with repository";
+				return JsonResult;
+			}
 			
+            Response response = future.get();
+                    
 			logger.info("HTTP Response STATUS: " + response.getStatus());
 			
 			if (null == response || response.getStatus() != Response.Status.OK.getStatusCode()) {
