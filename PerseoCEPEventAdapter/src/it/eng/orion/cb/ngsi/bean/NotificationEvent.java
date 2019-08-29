@@ -40,6 +40,9 @@ public class NotificationEvent {
 	@JsonProperty("annotationdes")
 	private AnnotationDes annotationDes;
 
+	@JsonProperty("format")
+	private Format format;
+	
 	public String getId() {
 		return id;
 	}
@@ -136,6 +139,11 @@ public class NotificationEvent {
 		this.annotationDes = annotationDes;
 	}
 	
-	
-	
+	public Format getFormat() {
+		return format;
+	}
+
+	public void setFormat(Format format) {
+		this.format = format;
+	}
 }
