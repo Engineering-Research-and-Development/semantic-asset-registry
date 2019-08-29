@@ -24,8 +24,11 @@ import it.eng.orion.cb.ngsi.bean.AnnotationDes;
 import it.eng.orion.cb.ngsi.bean.AnnotationId;
 import it.eng.orion.cb.ngsi.bean.EquipmentID;
 import it.eng.orion.cb.ngsi.bean.EventType;
+import it.eng.orion.cb.ngsi.bean.Format;
 import it.eng.orion.cb.ngsi.bean.NotificationEvent;
+import it.eng.orion.cb.ngsi.bean.OperatorInfo;
 import it.eng.orion.cb.ngsi.bean.OrionEntityBundle;
+import it.eng.orion.cb.ngsi.bean.PersonID;
 import it.eng.util.Util;
 
 public class OrionCreateEntity {
@@ -103,11 +106,65 @@ public class OrionCreateEntity {
 			annotationDes.setValue(annotation.getAnnotationDes());
 			notificatinEvent.setAnnotationDes(annotationDes);
 
+			// set format
+			Format format = new Format();
+			format.setType("String");
+			format.setValue("NOTICE");
+			notificatinEvent.setFormat(format);
+						
 			createEntityOnOrion(orionPath, headers, notificatinEvent);
 		}
 
 		log.info("Method addNotificationEvent end ...");
 
+	}
+	
+	/**
+	 * Add HMDNotificationEvent on ORION Context Broker
+	 * 
+	 * @return
+	 */
+	public void login(HttpHeaders headers, String json) throws Exception {
+		log.info("Method login init ...");
+
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode actualObj = mapper.readTree(json);
+
+		String TARGET_URL = actualObj.get("camPath").textValue() + "/SPARQLQuery";
+
+		ObjectNode jsonAttributes = (ObjectNode) actualObj.get("attributes");
+
+		String orionPath = actualObj.get("orionPath").textValue();
+
+		OperatorInfo operator = SparqlService
+				.getOperatorByInteractionDeviceId(jsonAttributes.get("interactiondeviceid").get("value").asText(), TARGET_URL);
+
+		if (operator != null && operator.getOperatorInstanceName() != null && operator.getJobOrder()!=null) {
+			NotificationEvent notificatinEvent = new NotificationEvent();
+
+			// set eventtype
+			EventType eventType = new EventType();
+			eventType.setType("String");
+			eventType.setValue("LOGIN");
+			notificatinEvent.setEventType(eventType);
+
+			// set equipmentid
+			if (jsonAttributes.has("equipmentid")) {
+				EquipmentID equipmentId = new EquipmentID();
+				equipmentId.setType("String");
+				equipmentId.setValue(jsonAttributes.get("equipmentid").get("value").asText());
+				notificatinEvent.setEquipmentID(equipmentId);
+			}
+			
+			PersonID personID = new PersonID();
+			personID.setType("String");
+			personID.setValue(operator.getOperatorId());
+			notificatinEvent.setPersonID(personID);
+
+			createEntityOnOrion(orionPath, headers, notificatinEvent);
+		}
+
+		log.info("Method login end ...");
 	}
 
 	/**
