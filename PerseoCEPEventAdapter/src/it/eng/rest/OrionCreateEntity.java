@@ -25,6 +25,7 @@ import it.eng.orion.cb.ngsi.bean.AnnotationId;
 import it.eng.orion.cb.ngsi.bean.EquipmentID;
 import it.eng.orion.cb.ngsi.bean.EventType;
 import it.eng.orion.cb.ngsi.bean.Format;
+import it.eng.orion.cb.ngsi.bean.NotificationDes;
 import it.eng.orion.cb.ngsi.bean.NotificationEvent;
 import it.eng.orion.cb.ngsi.bean.OperatorInfo;
 import it.eng.orion.cb.ngsi.bean.OrionEntityBundle;
@@ -77,7 +78,7 @@ public class OrionCreateEntity {
 		// retrieve Annotation by the joborderid
 		Annotation annotation = SparqlService
 				.getAnnotationByJobOrderId(jsonAttributes.get("joborderid").get("value").asText(), TARGET_URL);
-
+		
 		// add NotificationEvent on Orion
 		if (annotation != null && annotation.getAnnotationId() != null) {
 			NotificationEvent notificatinEvent = new NotificationEvent();
@@ -96,16 +97,31 @@ public class OrionCreateEntity {
 				notificatinEvent.setEquipmentID(equipmentId);
 			}
 
+			// set annotationId
 			AnnotationId annotationId = new AnnotationId();
 			annotationId.setType("String");
 			annotationId.setValue(annotation.getAnnotationId());
 			notificatinEvent.setAnnotationId(annotationId);
-
+			
+			// set annotationDes
 			AnnotationDes annotationDes = new AnnotationDes();
 			annotationDes.setType("String");
 			annotationDes.setValue(annotation.getAnnotationDes());
 			notificatinEvent.setAnnotationDes(annotationDes);
-
+			
+			// set notificationDes
+			NotificationDes notificationDes = new NotificationDes();
+			notificationDes.setType("String");
+			notificationDes.setValue(annotation.getAnnotationDes());
+			notificatinEvent.setNotificationDes(notificationDes);
+			
+			// set personId
+			OperatorInfo operatorInfo = SparqlService.getPersonIdByAnnotationId(annotation.getAnnotationId(),TARGET_URL);
+			PersonID personID = new PersonID();
+			personID.setType("String");
+			personID.setValue(operatorInfo.getOperatorId());
+			notificatinEvent.setPersonID(personID);
+			
 			// set format
 			Format format = new Format();
 			format.setType("String");
