@@ -39,7 +39,10 @@ public class NotificationEvent {
 	
 	@JsonProperty("annotationdes")
 	private AnnotationDes annotationDes;
-
+	
+	@JsonProperty("notificationdes")
+	private NotificationDes notificationDes;
+	
 	@JsonProperty("format")
 	private Format format;
 	
@@ -139,6 +142,14 @@ public class NotificationEvent {
 		this.annotationDes = annotationDes;
 	}
 	
+	public NotificationDes getNotificationDes() {
+		return notificationDes;
+	}
+
+	public void setNotificationDes(NotificationDes notificationDes) {
+		this.notificationDes = notificationDes;
+	}
+
 	public Format getFormat() {
 		return format;
 	}
